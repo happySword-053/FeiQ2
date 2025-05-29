@@ -1,0 +1,3 @@
+D:\Cmake_dir\bin\cmake.exe -E rm -f CMakeFiles\jsonCppTest.dir/objects.a
+D:\qt\Tools\mingw1310_64\bin\ar.exe qc CMakeFiles\jsonCppTest.dir/objects.a @CMakeFiles\jsonCppTest.dir\objects1.rsp
+D:\qt\Tools\mingw1310_64\bin\g++.exe -Wl,--enable-auto-import -Wl,--whole-archive CMakeFiles\jsonCppTest.dir/objects.a -Wl,--no-whole-archive -o jsonCppTest.exe -Wl,--out-implib,libjsonCppTest.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\jsonCppTest.dir\linkLibs.rsp

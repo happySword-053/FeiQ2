@@ -1,0 +1,3 @@
+D:/qtproject/FeiQ2/test/BoostUdp/build/CMakeFiles/main.dir
+D:/qtproject/FeiQ2/test/BoostUdp/build/CMakeFiles/edit_cache.dir
+D:/qtproject/FeiQ2/test/BoostUdp/build/CMakeFiles/rebuild_cache.dir
