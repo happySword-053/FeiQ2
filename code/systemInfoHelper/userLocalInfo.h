@@ -4,6 +4,7 @@
 #include <vector>
 #include"../logs/logs.h"
 #include"AdapterInfo.h"
+#include <sstream>
 //默认userName和PCName为本机信息,userName后续可改
 struct UserInfo{
     std::string userName;

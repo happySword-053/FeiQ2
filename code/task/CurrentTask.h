@@ -9,6 +9,7 @@
 #include"../systemInfoHelper/userLocalInfo.h"
 
 #define BLOCK_SIZE 16 * 1024 // 16KB块大小
+/* 任务类型*/
 #define ERROR_TASK -1
 #define NON_TASK 0
 #define FILE_LIST_REQUEST 1 // 请求当前可以下载的文件列表
@@ -19,7 +20,9 @@
 #define USERINFO_AND_ADAPTERINFO 6 // 发送用户信息和网卡信息
 #define CHAT_MESSAGE 7 // 聊天文字消息
 
-/*---------通用任务协议，最终封装的任务类---------*/
+#define UDP_BROADCAST 60 // 广播消息
+#define UDP_BROADCAST_CLOSE 61 // 下机，从udp的endpoints中移除本ip
+
 
 
 // 自定义协议
@@ -205,3 +208,4 @@ struct UserInfoAndAdapterInfo {
         return info;
     }
 };
+

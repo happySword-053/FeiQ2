@@ -63,6 +63,13 @@ private:
     Adapter now_adapter;  // 适配器信息结构体
 public:
     int init();
+    AdapterInfo() { // 初始化适配器信息链表
+        // WSADATA wsaData;          // Windows Sockets数据结构
+        // WSAStartup(MAKEWORD(2, 2), &wsaData);  // 初始化Sockets环境
+        init();
+        updateAdapters();
+        this->now_adapter = getNowAdapterOnline();
+    }
     ~AdapterInfo() {  // 析构函数：释放内存
         if(pAdapterAddresses){
             free(pAdapterAddresses);  // 释放适配器信息链表内存
@@ -76,5 +83,5 @@ public:
     }
     Adapter getNowAdapterOnline();//获取第一个当前连上网的适配器信息
     Adapter getAdapterByIndex(int index);//根据索引获取适配器信息
-    Adapter getNowAdapter(){return now_adapter;}//获取当前适配器信息
+    Adapter getNowAdapter()const{return now_adapter;}//获取当前适配器信息
 };
