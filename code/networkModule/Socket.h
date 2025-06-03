@@ -4,6 +4,7 @@
 #include<vector>
 #include<mutex>  // 新增：互斥锁头文件
 #include<memory>  // 新增：智能指针头文件
+#include<functional>
 #include<unordered_set>
 #include"../logs/logs.h"
 #include<array>
@@ -11,6 +12,7 @@
 #include"NetworkHelper.h"
 #include"../task/CurrentTask.h"
 #include"../threadPool/ThreadPool.h"
+#include"../MyControl/MetaDataDefine.h"
 
 #define UDP_PORT 30000
 #define TCP_PORT 30001
@@ -25,7 +27,8 @@ private:
     std::vector<char> send_buffer_;  // 发送缓冲区
     std::mutex recv_mtx;  // 用于同步读写操作的互斥锁
     std::mutex send_mtx;  // 用于同步读写操作的互斥锁
-    
+    std::function<void(std::vector<char>&&)> on_data_control_;  // 用于处理数据的回调函数
+
 public:
     Session(boost::asio::ip::tcp::socket &&socket) : socket_(std::move(socket)) {}  // 构造函数
     //移动构造函数
@@ -48,7 +51,9 @@ public:
     void dowrite();//写入数据
     int handle_data();//处理数据
     void stop();//停止会话
-    
+    void set_on_data_control(std::function<void(std::vector<char>&&)> on_data_control) {  // 设置回调函数
+        on_data_control_ = std::move(on_data_control);  // 使用 move 转移
+    }
 };
 
 
@@ -67,6 +72,7 @@ private:
     std::unique_ptr<boost::asio::ip::tcp::acceptor> acceptor_; 
     std::vector<std::shared_ptr<Session>> sessions_;  // 改为 shared_ptr<Session>
     std::array<std::thread, 2> io_thread_;  // 新增：运行 io_context 的线程
+    std::function<void(std::vector<char>&&)> on_data_control_;  // 用于处理数据的回调函数
     /*----------工作任务-----*/
     void handle_accept(const boost::system::error_code& error,boost::asio::ip::tcp::socket new_socket);  // 新增：处理连接的函数
     
@@ -85,11 +91,17 @@ public:
         socket_.close();
         
     }
+    void io_run(){
+        io_context_.run();
+    }
     void init();//初始化函数
     int start();//启动函数
     int stop();//停止函数 
     void rebind(const std::string& ip);//重新绑定socket到ip
     void connect_by_udpEndpoint(std::unordered_set<boost::asio::ip::udp::endpoint> endpoints);
+    void set_on_data_control(std::function<void(std::vector<char>&&)> on_data_control) {  // 设置回调函数
+        on_data_control_ = std::move(on_data_control);  // 使用 move 转移
+    }
 };
 
 //封装一个udp会话类
@@ -104,6 +116,7 @@ private:
     boost::asio::ip::udp::endpoint remote_endpoint_;  // 远程端点
     std::array<std::thread, 2> io_thread_;  // 新增：运行 io_context 的线程
     boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work_guard_;
+    std::function<void(std::vector<char>&&)> on_data_control_;  // 用于处理数据的回调函数
     //UserInfoAndNetworkInfo& userInfoAndNetworkInfo;//用户信息和网络信息
     TcpModule& tcpModule;
     /*----------工作任务-----*/
@@ -124,11 +137,16 @@ public:
             });
         }
     }
-
+    void set_on_data_control(std::function<void(std::vector<char>&&)> on_data_control) {  // 设置回调函数
+        on_data_control_ = std::move(on_data_control);  // 使用 move 转移
+    }
 
     ~UdpModule();
     void init();//初始化函数
     void start_recv();//开启读任务
     void broadcast();//广播任务,发送自身的userInfoAndNetworkInfo
     void rebind(const std::string& ip);//重新绑定socket到ip
+    void io_run(){
+        io_context_.run();
+    }
 };
