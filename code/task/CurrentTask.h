@@ -23,7 +23,7 @@
 #define UDP_BROADCAST 60 // 广播消息
 #define UDP_BROADCAST_CLOSE 61 // 下机，从udp的endpoints中移除本ip
 
-
+#define TCP_SEND_MESSAGE 70 // 发送消息给tcp模块
 
 // 自定义协议
 class Info {
@@ -174,38 +174,41 @@ struct FileBlock {
 struct UserInfoAndAdapterInfo { 
     UserInfo userInfo;
     Adapter adapterInfo;
-    uint32_t datalength;
-    /*| datalength | userInfo | adapterInfo */
+    /*| userInfoSize | userInfo | adapterInfoSize | adapterInfo*/
     // 序列化为 vector<char>
     std::vector<char> serialize() const {
-        std::string userInfoStr = userInfo.serialize();
-        std::string adapterInfoStr = adapterInfo.serialize();
         std::vector<char> buffer;
-        // 写入datalength
-        auto* lenPtr = reinterpret_cast<const char*>(&datalength);
-        buffer.insert(buffer.end(), lenPtr, lenPtr + sizeof(datalength));
-        // 写入 userInfo
-        buffer.insert(buffer.end(), userInfoStr.begin(), userInfoStr.end());
-        // 写入 adapterInfo
-        buffer.insert(buffer.end(), adapterInfoStr.begin(), adapterInfoStr.end());
+        // 序列化 userInfo
+        std::vector<char> userInfoBuffer = userInfo.serialize();
+        uint32_t userInfoSize = static_cast<uint32_t>(userInfoBuffer.size());
+        auto* userInfoSizePtr = reinterpret_cast<const char*>(&userInfoSize);
+        buffer.insert(buffer.end(), userInfoSizePtr, userInfoSizePtr + sizeof(userInfoSize));
+        buffer.insert(buffer.end(), userInfoBuffer.begin(), userInfoBuffer.end());  
+        // 序列化 adapterInfo
+        std::vector<char> adapterInfoBuffer = adapterInfo.serialize();
+        uint32_t adapterInfoSize = static_cast<uint32_t>(adapterInfoBuffer.size());
+        auto* adapterInfoSizePtr = reinterpret_cast<const char*>(&adapterInfoSize);
+        buffer.insert(buffer.end(), adapterInfoSizePtr, adapterInfoSizePtr + sizeof(adapterInfoSize));
+        buffer.insert(buffer.end(), adapterInfoBuffer.begin(), adapterInfoBuffer.end());
         return buffer;
-
     }
-    // 从 vector<char> 反序列化
+    // 反序列化
     static UserInfoAndAdapterInfo deserialize(const std::vector<char>& buffer) {
         UserInfoAndAdapterInfo info;
         size_t offset = 0;
-        // 读datalength
-        info.datalength = *reinterpret_cast<const uint32_t*>(&buffer[offset]);
-        offset += sizeof(info.datalength);
+        // 读userInfoSize
+        uint32_t userInfoSize = *reinterpret_cast<const uint32_t*>(&buffer[offset]);
+        offset += sizeof(userInfoSize);
         // 读userInfo
-        std::string userInfoStr(buffer.begin() + offset, buffer.begin() + offset + info.datalength);
-        info.userInfo = UserInfo::deserialize(userInfoStr);
-        offset += info.datalength;
+        info.userInfo = UserInfo::deserialize(std::vector<char>(buffer.begin() + offset, buffer.begin() + offset + userInfoSize));
+        offset += userInfoSize;
+        // 读adapterInfoSize
+        uint32_t adapterInfoSize = *reinterpret_cast<const uint32_t*>(&buffer[offset]);
+        offset += sizeof(adapterInfoSize);
         // 读adapterInfo
-        std::string adapterInfoStr(buffer.begin() + offset, buffer.end());
-        info.adapterInfo = Adapter::deserialize(adapterInfoStr);
+        info.adapterInfo = Adapter::deserialize(std::vector<char>(buffer.begin() + offset, buffer.begin() + offset + adapterInfoSize));
         return info;
     }
+    
 };
 

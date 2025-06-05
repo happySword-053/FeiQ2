@@ -27,31 +27,39 @@
 #define MAX_ADDR_LEN 128
 struct Adapter {  // 适配器信息结构体（定义在类内部）
 
-    std::string operStatus;//媒体状态（网络是否连接）
-    std::string typeStr;//网络类型（以太网/无线等）
-    std::string friendName;//适配器名称（如"本地连接"）
-    std::string ipv4;//IPv4地址
-    std::string defaultGateway;//默认网关
-    // 新增序列化方法
-    std::string serialize() const {
+    std::string operStatus;  // 媒体状态（网络是否连接）
+    std::string typeStr;     // 网络类型（以太网/无线等）
+    std::string friendName;  // 适配器名称（如"本地连接"）
+    std::string ipv4;        // IPv4地址
+    std::string defaultGateway;  // 默认网关
+    std::string macAddress;      // 新增：物理地址（MAC地址）
+
+    // 序列化方法（更新）
+    // 序列化方法（修改为 vector<char> 载体）
+    std::vector<char> serialize() const {
         std::ostringstream oss;
         oss << operStatus << "|"
             << typeStr << "|"
             << friendName << "|"
             << ipv4 << "|"
-            << defaultGateway;
-        return oss.str();
+            << defaultGateway << "|"
+            << macAddress;  // 保持原字符串拼接逻辑
+        const std::string str = oss.str();  // 先生成中间字符串
+        return std::vector<char>(str.begin(), str.end());  // 转换为 vector<char>
     }
 
-    // 新增反序列化方法
-    static Adapter deserialize(const std::string& data) {
-        std::istringstream iss(data);
+    // 反序列化方法（输入改为 vector<char>）
+    static Adapter deserialize(const std::vector<char>& data) {
+        // 将 vector<char> 转换为 string 用于解析
+        std::string str(data.begin(), data.end());
+        std::istringstream iss(str);
         Adapter adapter;
         std::getline(iss, adapter.operStatus, '|');
         std::getline(iss, adapter.typeStr, '|');
         std::getline(iss, adapter.friendName, '|');
         std::getline(iss, adapter.ipv4, '|');
         std::getline(iss, adapter.defaultGateway, '|');
+        std::getline(iss, adapter.macAddress, '|');  // 字段顺序与序列化一致
         return adapter;
     }
 };

@@ -48,11 +48,15 @@ public:
         doread();  // 启动读取操作
     } // 启动会话
     void doread();//读取数据
-    void dowrite();//写入数据
-    int handle_data();//处理数据
+    void dowrite(std::vector<char> &&data);//写入数据
+    
     void stop();//停止会话
     void set_on_data_control(std::function<void(std::vector<char>&&)> on_data_control) {  // 设置回调函数
         on_data_control_ = std::move(on_data_control);  // 使用 move 转移
+    }
+    //获取ip
+    std::string get_ip() {
+        return socket_.remote_endpoint().address().to_string();  // 返回远程端点的 IP 地址 
     }
 };
 
@@ -70,8 +74,10 @@ private:
     boost::asio::io_context io_context_;
     boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work_guard_;
     std::unique_ptr<boost::asio::ip::tcp::acceptor> acceptor_; 
+
     std::vector<std::shared_ptr<Session>> sessions_;  // 改为 shared_ptr<Session>
-    std::array<std::thread, 2> io_thread_;  // 新增：运行 io_context 的线程
+
+    //std::array<std::thread, 2> io_thread_;  // 新增：运行 io_context 的线程
     std::function<void(std::vector<char>&&)> on_data_control_;  // 用于处理数据的回调函数
     /*----------工作任务-----*/
     void handle_accept(const boost::system::error_code& error,boost::asio::ip::tcp::socket new_socket);  // 新增：处理连接的函数
@@ -91,8 +97,12 @@ public:
         socket_.close();
         
     }
-    void io_run(){
-        io_context_.run();
+    void io_run() {
+        try {
+            io_context_.run();
+        } catch (const std::exception& e) {
+            LOG(std::string("io_context run failed: ") + e.what(), ERROR);
+        }
     }
     void init();//初始化函数
     int start();//启动函数
@@ -101,7 +111,10 @@ public:
     void connect_by_udpEndpoint(std::unordered_set<boost::asio::ip::udp::endpoint> endpoints);
     void set_on_data_control(std::function<void(std::vector<char>&&)> on_data_control) {  // 设置回调函数
         on_data_control_ = std::move(on_data_control);  // 使用 move 转移
-    }
+    } 
+    void sendData(const std::string& ip,std::vector<char>&& data);
+    //发送给所有连接的客户端
+    void sendDataToAll(std::vector<char>&& data);
 };
 
 //封装一个udp会话类
@@ -114,7 +127,7 @@ private:
     std::mutex endpoints,buffer_mtx;
     std::vector<char> recv_buffer_;  // 接收缓冲区
     boost::asio::ip::udp::endpoint remote_endpoint_;  // 远程端点
-    std::array<std::thread, 2> io_thread_;  // 新增：运行 io_context 的线程
+    //std::array<std::thread, 2> io_thread_;  // 新增：运行 io_context 的线程
     boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work_guard_;
     std::function<void(std::vector<char>&&)> on_data_control_;  // 用于处理数据的回调函数
     //UserInfoAndNetworkInfo& userInfoAndNetworkInfo;//用户信息和网络信息
@@ -131,11 +144,9 @@ public:
     work_guard_(boost::asio::make_work_guard(io_context_)) // 直接构造 work_guard
     {
         init();
-        for (auto& thread : io_thread_) {
-            thread = std::thread([this]() {
-                io_context_.run();  // 运行 IO 上下文
-            });
-        }
+        //向线程池提交两个运行io的线程
+        ThreadPool::getInstance().enqueue(&UdpModule::io_run,shared_from_this());
+        ThreadPool::getInstance().enqueue(&UdpModule::io_run,shared_from_this());
     }
     void set_on_data_control(std::function<void(std::vector<char>&&)> on_data_control) {  // 设置回调函数
         on_data_control_ = std::move(on_data_control);  // 使用 move 转移
@@ -146,7 +157,11 @@ public:
     void start_recv();//开启读任务
     void broadcast();//广播任务,发送自身的userInfoAndNetworkInfo
     void rebind(const std::string& ip);//重新绑定socket到ip
-    void io_run(){
-        io_context_.run();
+    void io_run() {
+        try {
+            io_context_.run();
+        } catch (const std::exception& e) {
+            LOG(std::string("io_context run failed: ") + e.what(), ERROR);
+        }
     }
 };

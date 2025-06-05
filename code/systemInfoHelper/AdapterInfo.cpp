@@ -97,15 +97,20 @@ int AdapterInfo::updateAdapters()
         //     << endl;
 
         // -------------------- 7. 输出MAC地址（物理地址） --------------------
-        // cout << "   物理地址............ : ";
-        // // 遍历物理地址字节数组（每个字节为0-255的无符号字符）
-        // for (UINT i = 0; i < adapter->PhysicalAddressLength; ++i) {
-        //     // 格式化输出两位十六进制（补零），并添加分隔符（如AA-BB-CC-DD-EE-FF）
-        //     printf("%02X%s",  // 使用printf保持十六进制格式化（C++标准输出需额外头文件）
-        //         adapter->PhysicalAddress[i],  // 当前字节
-        //         (i + 1 < adapter->PhysicalAddressLength) ? "-" : "");  // 分隔符
-        // }
-        // printf("\n");  // 换行（与cout混用，保持格式统一）
+        
+        // 遍历物理地址字节数组（每个字节为0-255的无符号字符）
+        std::string macStr;
+        for (UINT i = 0; i < adapter->PhysicalAddressLength; ++i) {
+            char byteBuf[3];  // 存储单个字节的十六进制（如 "AA"）
+            snprintf(byteBuf, sizeof(byteBuf), "%02X", adapter->PhysicalAddress[i]);
+            macStr += byteBuf;
+            // 添加分隔符（最后一个字节不加）
+            if (i != adapter->PhysicalAddressLength - 1) {
+                macStr += "-";
+            }
+        }
+        adp.macAddress = macStr.empty() ? "(无)" : macStr;  // 无MAC地址时标记为"(无)"
+        
 
         // -------------------- 8. 输出IPv4地址、前缀长度及默认网关 --------------------
         bool hasIpv4 = false;  // 标记是否存在IPv4地址

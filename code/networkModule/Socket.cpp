@@ -12,6 +12,7 @@ void TcpModule::handle_accept(const boost::system::error_code &error, boost::asi
         LOG("接到外来连接",INFO);
         // 使用 shared_ptr 管理 Session
         auto session = std::make_shared<Session>(std::move(new_socket));
+        session->set_on_data_control(this->on_data_control_);
         session->start();  // start() 内部通过 shared_from_this() 安全获取指针
         {
             std::unique_lock<std::mutex> lock(mtx);
@@ -43,6 +44,7 @@ void TcpModule::createSession(std::string ip) {
         //创建一个Session对象
 
         std::shared_ptr<Session> session = std::make_shared<Session>(std::move(socket));
+        session->set_on_data_control(this->on_data_control_);
         session->start();
         {
             std::unique_lock<std::mutex> lock(mtx);
@@ -62,11 +64,10 @@ TcpModule::TcpModule()
 {
     
     init();
-    for (auto& thread : io_thread_) {
-        thread = std::thread([this]() {
-            io_context_.run();  // 运行 IO 上下文
-        });
-    }
+    //向线程池提交三个运行io的线程
+    ThreadPool::getInstance().enqueue(&TcpModule::io_run,shared_from_this());
+    ThreadPool::getInstance().enqueue(&TcpModule::io_run,shared_from_this());
+    ThreadPool::getInstance().enqueue(&TcpModule::io_run,shared_from_this());
 }
 void TcpModule::init(){
     try {
@@ -148,66 +149,127 @@ void TcpModule::rebind(const std::string &ip)
 }
 void TcpModule::connect_by_udpEndpoint(std::unordered_set<boost::asio::ip::udp::endpoint> endpoints)
 {
+    //发送自身的适配器和名称等信息
+    UserInfoAndAdapterInfo info;
+    info.userInfo = UserInfoHelper::getInstance().getUserInfo();
+    info.adapterInfo = NetworkHelper::getInstance().getAdapterInfo().getNowAdapter();
+    //序列化
+    auto data = info.serialize();
     try{
         //遍历endpoints
         for(auto& endpoint : endpoints){
-          createSession(endpoint.address().to_string());
-          
+            createSession(endpoint.address().to_string());
         }
+        sendDataToAll(std::move(data));//发送数据到所有连接的客户端,此时所有客户端都已经connecte
     }catch(const std::exception& e){
         LOG(std::string("connect_by_udpEndpoint失败: ") + e.what(), ERROR);
         throw std::runtime_error("connect_by_udpEndpoint失败"); // 可选：向上传递异常或处理
     }
 }
-  /*-------Session类-----------*/
-  void Session::doread()
-  {
-      // 确保 recv_buffer_ 准备好接收数据
-      // 如果 recv_buffer_ 是 std::vector<char> 并且您想覆盖旧数据，
-      // 并且确保它有足够的大小。通常在创建时或每次读取前调整。
-      // 例如，如果 recv_buffer_ 还没有分配足够的空间：
-      if (recv_buffer_.size() < 1024 * 9) {
-          recv_buffer_.resize(1024 * 9);
-      }
-  
-      auto self = shared_from_this(); // 获取当前对象的 shared_ptr
-      socket_.async_read_some(
-          boost::asio::buffer(recv_buffer_.data(), recv_buffer_.size()), // 使用 .data() 和 .size() 更安全
-          [this, self](const boost::system::error_code &error, std::size_t bytes_transferred) { 
-              if (!error) {
-                  // 成功读取 bytes_transferred 字节的数据
-                  LOG(std::string("读取到 ") + std::to_string(bytes_transferred) + " 字节数据", INFO);
-                  
-                  // TODO: 在这里处理接收到的数据
-                  // 例如: handel_data(recv_buffer_.data(), bytes_transferred);
-                  // 注意：handel_data 需要接收实际读取的数据量
-                  // int result = handel_data(); // 您当前的 handel_data 不接收参数
-  
-                  // 处理完数据后，继续下一次读取
-                  doread(); 
-              } else {
-                  // 发生错误
-                  if (error == boost::asio::error::eof) {
-                      LOG("连接被对方关闭 (EOF)", INFO);
-                  } else if (error == boost::asio::error::operation_aborted) {
-                      LOG("读取操作被取消 (aborted)", INFO);
-                  } else {
-                      LOG(std::string("read失败: ") + error.message(), ERROR);
-                  }
-                  // 发生错误或EOF，关闭会话
-                  // 通常在这里调用 stop() 或者通知 TcpModule 移除此会话
-                  // 例如: stop(); 
-                  // 或者: if (auto owner = owner_module_.lock()) { owner->remove_session(self); }
-                  // 这里简单地停止，具体实现取决于您的会话管理策略
-                  stop(); // 确保 stop() 能被安全调用
-              }
-          });
+void TcpModule::sendData(const std::string &ip, std::vector<char> &&data)
+{
+    try{
+        {
+            std::unique_lock<std::mutex> lock(mtx);
+            //遍历sessions_
+            for(auto& session : this->sessions_){
+                //如果ip相同，发送数据
+                if(session->get_ip() == ip){
+                    session->dowrite(std::move(data));
+                    return;
+                }
+            }
+        }
+    }catch(const std::exception& e){
+        LOG(std::string("sendData失败: ") + e.what(), ERROR);
+        throw std::runtime_error("sendData失败"); // 可选：向上传递异常或处理
+    }
+}
+void TcpModule::sendDataToAll(std::vector<char> &&data)
+{
+    try{
+        std::unique_lock<std::mutex> lock(mtx);
+        //遍历sessions_
+        for(auto& session : this->sessions_){
+            //发送数据
+            session->dowrite(std::move(data));
+        }
+    }catch(const std::exception& e){
+        LOG(std::string("sendDataToAll失败: ") + e.what(), ERROR);
+    }
+}
+/*-------Session类-----------*/
+void Session::doread()
+{
+    // 确保 recv_buffer_ 准备好接收数据
+    // 如果 recv_buffer_ 是 std::vector<char> 并且您想覆盖旧数据，
+    // 并且确保它有足够的大小。通常在创建时或每次读取前调整。
+    // 例如，如果 recv_buffer_ 还没有分配足够的空间：
+    if (recv_buffer_.size() < 1024 * 9)
+    {
+        recv_buffer_.resize(1024 * 9);
+    }
+
+    auto self = shared_from_this(); // 获取当前对象的 shared_ptr
+    socket_.async_read_some(
+        boost::asio::buffer(recv_buffer_.data(), recv_buffer_.size()), // 使用 .data() 和 .size() 更安全
+        [this, self](const boost::system::error_code &error, std::size_t bytes_transferred)
+        {
+            if (!error)
+            {
+                // 成功读取 bytes_transferred 字节的数据
+                LOG(std::string("读取到 ") + std::to_string(bytes_transferred) + " 字节数据", INFO);
+                std::vector<char> data;
+                {
+                    // 加锁，确保在读取数据时不会被其他线程修改
+                    std::unique_lock<std::mutex> lock(recv_mtx);
+                    // 处理数据
+                    data = std::vector<char>(recv_buffer_.begin(), recv_buffer_.begin() + bytes_transferred);
+                }
+                // TODO: 在这里处理接收到的数据
+                // 例如: handel_data(recv_buffer_.data(), bytes_transferred);
+                // 注意：handel_data 需要接收实际读取的数据量
+                // int result = handel_data(); // 您当前的 handel_data 不接收参数
+
+                // 调用 on_data_control_ 处理数据
+                if (on_data_control_)
+                {
+                    on_data_control_(std::move(data)); // 调用 on_data_control_ 处理数据
+                }
+                else
+                {
+                    LOG("未设置 on_data_control_ 回调", WARNING);
+                }
+
+                // 处理完数据后，继续下一次读取
+                doread();
+            }
+            else
+            {
+                // 发生错误
+                if (error == boost::asio::error::eof)
+                {
+                    LOG("连接被对方关闭 (EOF)", INFO);
+                }
+                else if (error == boost::asio::error::operation_aborted)
+                {
+                    LOG("读取操作被取消 (aborted)", INFO);
+                }
+                else
+                {
+                    LOG(std::string("read失败: ") + error.message(), ERROR);
+                }
+                // 发生错误或EOF，关闭会话
+                // 通常在这里调用 stop() 或者通知 TcpModule 移除此会话
+                // 例如: stop();
+                // 或者: if (auto owner = owner_module_.lock()) { owner->remove_session(self); }
+                // 这里简单地停止，具体实现取决于您的会话管理策略
+                stop(); // 确保 stop() 能被安全调用
+            }
+        });
 }
 
-int Session::handle_data()
-{
-    return 0;
-}
+
 
 void Session::stop()
 {
@@ -318,10 +380,5 @@ UdpModule::~UdpModule() {
     work_guard_.reset();  // 若有 work_guard_ 成员（需补充）
     io_context_.stop();
     socket_.close();
-    // 等待线程结束（若有 IO 线程）
-    for (auto& thread : io_thread_) {
-        if (thread.joinable()) {
-            thread.join();
-        }
-    }
+    
 }
