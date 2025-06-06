@@ -13,6 +13,11 @@ void TcpModule::handle_accept(const boost::system::error_code &error, boost::asi
         // 使用 shared_ptr 管理 Session
         auto session = std::make_shared<Session>(std::move(new_socket));
         session->set_on_data_control(this->on_data_control_);
+        session->set_on_stop([this, weak_session = std::weak_ptr<Session>(session)] {
+            if (auto locked_session = weak_session.lock()) {
+                removeSession(locked_session);
+            }
+        });
         session->start();  // start() 内部通过 shared_from_this() 安全获取指针
         {
             std::unique_lock<std::mutex> lock(mtx);
@@ -55,6 +60,13 @@ void TcpModule::createSession(std::string ip) {
         LOG(std::string("创建Session失败: ") + e.what(), ERROR);
         throw std::runtime_error("创建Session失败");
     }
+}
+void TcpModule::removeSession(std::shared_ptr<Session> session)
+{
+    std::unique_lock<std::mutex> lock(mtx);
+    // 从 sessions_ vector 中找到并移除指定的会话
+    sessions_.erase(std::remove(sessions_.begin(), sessions_.end(), session), sessions_.end());
+    LOG("会话已移除。", INFO);
 }
 
 TcpModule::TcpModule()
@@ -132,6 +144,8 @@ void TcpModule::rebind(const std::string &ip)
         //清空sessions_
         this->sessions_.clear();
         lock.unlock();
+        // 停止当前的 acceptor 并用新 IP 重新配置
+        acceptor_->close();
         //重新绑定socket
         this->socket_.close();
         this->socket_.open(boost::asio::ip::tcp::v4());//打开socket
@@ -141,6 +155,11 @@ void TcpModule::rebind(const std::string &ip)
         //初始化一个endpoint
         boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::address::from_string(adp.ipv4.c_str()), this->port_);
         socket_.bind(endpoint);//绑定socket到endpoint
+        acceptor_ = std::make_unique<boost::asio::ip::tcp::acceptor>(io_context_, endpoint);
+        //启动acceptor
+        acceptor_->listen();//监听
+        //启动acceptor
+        start();
         LOG("tcp已重新绑定socket到ip: " + ip, INFO);
     }catch(const std::exception& e){
         LOG(std::string("rebind失败: ") + e.what(), ERROR);
@@ -269,16 +288,105 @@ void Session::doread()
         });
 }
 
+void Session::dowrite(std::vector<char> &&data)
+{
+    auto self = shared_from_this();
 
+    // 一切对队列的操作都通过 strand 串行执行
+    boost::asio::post(strand_, [this, self, d = std::move(data)]() mutable {
+        std::unique_lock<std::mutex> lock(write_mtx_);
+
+        // 1. 把 data 移入队列尾
+        write_queue_.push_back(std::move(d));
+        // it 指向刚插入的那块缓冲
+        auto it = std::prev(write_queue_.end());
+
+        // 2. 如果当前没有异步写在跑，就立刻启动一次：
+        if (!write_in_progress_) {
+            write_in_progress_ = true;
+
+            // NOTE: 释放锁后，调用 async_write_some —— 让回调里再锁、删或续写
+            lock.unlock();
+            start_async_write(it, 0);
+        }
+    });
+
+}
+
+void Session::start_async_write(std::deque<std::vector<char>>::iterator it, std::size_t offset)
+{
+    auto self = shared_from_this();
+
+    // 如果 offset 已经等于它的 size，说明这块缓冲无需写
+    if (offset >= it->size()) {
+        finish_this_buffer(it);
+        return;
+    }
+
+    // 构造要写的 buffer：从 it->data() + offset，长度 = it->size() - offset
+    auto ptr = it->data() + offset;
+    auto len = it->size() - offset;
+
+    socket_.async_write_some(
+        boost::asio::buffer(ptr, len),
+        boost::asio::bind_executor(strand_,
+            [this, self, it, offset](const boost::system::error_code& ec, std::size_t bytes_written) {
+                if (ec) {
+                    // 出错：清空队列、重置写标志并关闭 socket
+                    std::unique_lock<std::mutex> lock(write_mtx_);
+                    write_queue_.clear();
+                    write_in_progress_ = false;
+                    lock.unlock();
+                    socket_.close();
+                    return;
+                }
+
+                // 实际写了 bytes_written 字节
+                std::size_t new_offset = offset + bytes_written;
+
+                // 如果正好写满了当前缓冲，就把它从队列删掉
+                if (new_offset >= it->size()) {
+                    finish_this_buffer(it);
+                } else {
+                    // 还没写完，把这个缓冲“剩余部分”继续写
+                    start_async_write(it, new_offset);
+                }
+            }
+        )
+    );
+}
+
+void Session::finish_this_buffer(std::deque<std::vector<char>>::iterator it)
+{
+     // 1. 锁住队列，把 it 对应的那个缓冲擦掉
+     std::unique_lock<std::mutex> lock(write_mtx_);
+     write_queue_.erase(it);
+
+     // 2. 如果队列里还有下一个就继续写
+     if (!write_queue_.empty()) {
+         // 下一个缓冲的迭代器是 begin()
+         auto next_it = write_queue_.begin();
+         lock.unlock();
+
+         // 继续写下一个，offset 从 0 开始
+         start_async_write(next_it, 0);
+     } else {
+         // 队列空了，把写标志复位
+         write_in_progress_ = false;
+         // lock 会在此作用域析构
+     }
+}
 
 void Session::stop()
 {
     //先获取两个锁，不允许读写操作
     std::unique_lock<std::mutex> lock1(this->recv_mtx, std::defer_lock);
-    std::unique_lock<std::mutex> lock2(this->send_mtx, std::defer_lock);
+    std::unique_lock<std::mutex> lock2(this->write_mtx_, std::defer_lock);
     std::lock(lock1, lock2);  // 同时获取两个锁
-    //关闭socket
-    this->socket_.close();
+    // ... 关闭 socket 的代码 ...
+    if (on_stop_) {
+        on_stop_();
+    }
     LOG("已断开连接,关闭其套接字", INFO);
 }
 
@@ -312,38 +420,54 @@ void UdpModule::start_recv()
         });
 }
 
-void UdpModule::broadcast()
+void UdpModule::broadcast(int count = 0)
 {
-    int count = 0;
+    if (count >= 3)
+    {
+        // 发送三次后，等待2秒
+        boost::asio::deadline_timer timer(io_context_);
+        timer.expires_from_now(boost::posix_time::seconds(2));
+        timer.async_wait([self = shared_from_this()](const boost::system::error_code& ec) {
+            if (!ec) 
+            {
+                ThreadPool::getInstance().enqueue(
+                    &TcpModule::connect_by_udpEndpoint,
+                    self->tcpModule,
+                    self->endpoints_
+                );
+            }
+        });
+        return;
+    }
+
     Info info;
     info.taskType = UDP_BROADCAST;
     info.data.resize(0);
     auto task_data = info.serialize();
-    //初始化boostbuffer
     boost::asio::const_buffer buffer(task_data.data(), task_data.size());
-    //获取适配器信息
     auto adp = NetworkHelper::getInstance().getAdapterInfo().getNowAdapter();
-    try{
-        //广播三次
-        while (count < 3)
-        {
-            socket_.send_to(buffer, boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(adp.ipv4.c_str()), UDP_PORT));
-            //休眠3秒
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-            count++;
-        }
-    }catch( std::exception& e){
-        LOG(std::string("广播失败: ") + e.what(), ERROR);
-        throw std::runtime_error("广播失败"); // 可选：向上传递异常或处理
+    std::string ipv4 = adp.ipv4;
+    std::string broadcast_ip = APIHelper::calculate_broadcast(ipv4);
+
+    try
+    {
+        socket_.send_to(buffer, boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(broadcast_ip), UDP_PORT));
     }
-    //等待2秒确认收到回复
-    std::this_thread::sleep_for(std::chrono::seconds(2));
-    //将tcp连接任务提交到线程池
-    ThreadPool::getInstance().enqueue(
-      &TcpModule::connect_by_udpEndpoint,
-      this->tcpModule,
-      this->endpoints_
-    );
+    catch (const std::exception& e)
+    {
+        LOG(std::string("广播失败: ") + e.what(), ERROR);
+        // 继续下一次发送
+    }
+
+    // 调度下一次发送
+    boost::asio::deadline_timer timer(io_context_);
+    timer.expires_from_now(boost::posix_time::seconds(1));
+    timer.async_wait([self = shared_from_this(), next_count = count + 1](const boost::system::error_code& ec) {
+        if (!ec) 
+        {
+            self->broadcast(next_count);
+        }
+    });
 }
 
 void UdpModule::rebind(const std::string &ip){
@@ -359,8 +483,9 @@ void UdpModule::rebind(const std::string &ip){
         boost::asio::ip::udp::endpoint endpoint(boost::asio::ip::address::from_string(adp.ipv4.c_str()), UDP_PORT);
         socket_.bind(endpoint);//绑定socket到endpoint
         LOG("udp已重新绑定socket到ip: " + ip, INFO);
-        this->tcpModule.rebind(ip);
         LOG("tcp重绑准备: " + ip, INFO);
+        this->tcpModule.rebind(ip);
+        
     }catch( std::exception& e){
         LOG(std::string("rebind失败: ") + e.what(), ERROR);
         throw std::runtime_error("rebind失败"); // 可选：向上传递异常或处理

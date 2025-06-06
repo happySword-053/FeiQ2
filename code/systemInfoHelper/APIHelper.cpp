@@ -29,3 +29,63 @@ std::string APIHelper::WCharToString(const wchar_t *wstr)
     );
     return std::string(buf.data());  // 转换为std::string返回
 }
+
+std::string APIHelper::calculate_broadcast(const std::string &cidr)
+{
+    size_t slash_pos = cidr.find('/');
+    if (slash_pos == std::string::npos) {
+        throw std::invalid_argument("Invalid CIDR format: missing '/'");
+    }
+
+    std::string ip_part = cidr.substr(0, slash_pos);
+    std::string prefix_part = cidr.substr(slash_pos + 1);
+
+    uint32_t ip = parse_ipv4(ip_part);
+    int prefix = std::stoi(prefix_part);
+
+    if (prefix < 0 || prefix > 32) {
+        throw std::invalid_argument("Invalid prefix length");
+    }
+
+    // 计算广播地址
+    uint32_t mask = 0xFFFFFFFF << (32 - prefix);
+    uint32_t network = ip & mask;
+    uint32_t broadcast = network | (~mask);
+
+    return ip_to_string(broadcast);
+}
+
+std::string APIHelper::ip_to_string(uint32_t ip)
+{
+    return std::to_string((ip >> 24) & 0xFF) + "." +
+           std::to_string((ip >> 16) & 0xFF) + "." +
+           std::to_string((ip >> 8) & 0xFF) + "." +
+           std::to_string(ip & 0xFF);
+}
+
+uint32_t APIHelper::parse_ipv4(const std::string &ip_str)
+{
+    uint32_t ip = 0;
+    std::istringstream iss(ip_str);
+    std::string part;
+    int octet = 0;
+
+    while (std::getline(iss, part, '.') && octet < 4) {
+        try {
+            int value = std::stoi(part);
+            if (value < 0 || value > 255) {
+                throw std::invalid_argument("Invalid octet value");
+            }
+            ip = (ip << 8) | value;
+            octet++;
+        } catch (...) {
+            throw std::invalid_argument("Invalid IP address format");
+        }
+    }
+
+    if (octet != 4) {
+        throw std::invalid_argument("IPv4 address must have exactly 4 octets");
+    }
+
+    return ip;
+}
