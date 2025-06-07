@@ -10,7 +10,8 @@
                 "D:/qt/6.8.2/mingw_64/include/QtGui",
                 "D:/qt/6.8.2/mingw_64/include/QtCore",
                 "${workspaceFolder}/build/FeiQ2_autogen/include",
-                "${workspaceFolder}/code/jsonCpp"
+                "${workspaceFolder}/code/jsonCpp",
+                "${workspaceFolder}/lib-common/src/OpenSSL/include"
             ],
             "defines": [
                 "_DEBUG",

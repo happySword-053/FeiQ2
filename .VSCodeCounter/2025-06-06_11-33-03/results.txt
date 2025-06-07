@@ -1,0 +1,95 @@
+Date : 2025-06-06 11:33:03
+Directory : d:\qtproject\FeiQ2
+Total : 43 files,  2482 codes, 570 comments, 344 blanks, all 3396 lines
+
+Languages
++----------+------------+------------+------------+------------+------------+
+| language | files      | code       | comment    | blank      | total      |
++----------+------------+------------+------------+------------+------------+
+| C++      |         36 |      2,369 |        512 |        316 |      3,197 |
+| CMake    |          6 |        100 |         58 |         28 |        186 |
+| JSON     |          1 |         13 |          0 |          0 |         13 |
++----------+------------+------------+------------+------------+------------+
+
+Directories
++---------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                          | files      | code       | comment    | blank      | total      |
++---------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                             |         43 |      2,482 |        570 |        344 |      3,396 |
+| . (Files)                                                     |          1 |         56 |         38 |         17 |        111 |
+| code                                                          |         30 |      1,927 |        430 |        244 |      2,601 |
+| code (Files)                                                  |          1 |         12 |          0 |          2 |         14 |
+| code\MyControl                                                |          4 |        155 |         29 |         27 |        211 |
+| code\MyControl (Files)                                        |          1 |          5 |          0 |          1 |          6 |
+| code\MyControl\MyLabel                                        |          2 |         81 |         17 |         15 |        113 |
+| code\MyControl\MyWidget                                       |          1 |         69 |         12 |         11 |         92 |
+| code\fileSystem                                               |          4 |        142 |         28 |         14 |        184 |
+| code\fileSystem\downloader                                    |          2 |          7 |          1 |          1 |          9 |
+| code\fileSystem\uploader                                      |          2 |        135 |         27 |         13 |        175 |
+| code\jsonCpp                                                  |          2 |        125 |         30 |         22 |        177 |
+| code\logs                                                     |          2 |         66 |         17 |          4 |         87 |
+| code\mainwindow                                               |          2 |         74 |         17 |          8 |         99 |
+| code\networkModule                                            |          6 |        646 |        129 |         83 |        858 |
+| code\selfDomain                                               |          1 |         94 |         41 |          7 |        142 |
+| code\systemInfoHelper                                         |          6 |        381 |         81 |         54 |        516 |
+| code\task                                                     |          1 |        151 |         49 |         15 |        215 |
+| code\threadPool                                               |          1 |         81 |          9 |          8 |         98 |
+| test                                                          |         12 |        499 |        102 |         83 |        684 |
+| test (Files)                                                  |          1 |         19 |          8 |          4 |         31 |
+| test\BoostAsio                                                |          2 |        125 |         13 |         18 |        156 |
+| test\BoostUdp                                                 |          2 |         96 |         17 |         24 |        137 |
+| test\GetLocalName                                             |          1 |         23 |          2 |          3 |         28 |
+| test\GetLocalNet                                              |          2 |        159 |         55 |         19 |        233 |
+| test\boostFilesystem                                          |          1 |          0 |          0 |          1 |          1 |
+| test\jsonCpp                                                  |          3 |         77 |          7 |         14 |         98 |
++---------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++---------------------------------------------------------------+----------+------------+------------+------------+------------+
+| filename                                                      | language | code       | comment    | blank      | total      |
++---------------------------------------------------------------+----------+------------+------------+------------+------------+
+| d:\qtproject\FeiQ2\CMakeLists.txt                             | CMake    |         56 |         38 |         17 |        111 |
+| d:\qtproject\FeiQ2\code\MyControl\MetaDataDefine.h            | C++      |          5 |          0 |          1 |          6 |
+| d:\qtproject\FeiQ2\code\MyControl\MyLabel\mylabel.cpp         | C++      |         49 |         10 |         13 |         72 |
+| d:\qtproject\FeiQ2\code\MyControl\MyLabel\mylabel.h           | C++      |         32 |          7 |          2 |         41 |
+| d:\qtproject\FeiQ2\code\MyControl\MyWidget\FriendItemWidget.h | C++      |         69 |         12 |         11 |         92 |
+| d:\qtproject\FeiQ2\code\fileSystem\downloader\downloader.cpp  | C++      |          0 |          0 |          1 |          1 |
+| d:\qtproject\FeiQ2\code\fileSystem\downloader\downloader.h    | C++      |          7 |          1 |          0 |          8 |
+| d:\qtproject\FeiQ2\code\fileSystem\uploader\uploader.cpp      | C++      |        107 |         18 |          8 |        133 |
+| d:\qtproject\FeiQ2\code\fileSystem\uploader\uploader.h        | C++      |         28 |          9 |          5 |         42 |
+| d:\qtproject\FeiQ2\code\jsonCpp\dispositionReader.cpp         | C++      |         87 |         21 |         16 |        124 |
+| d:\qtproject\FeiQ2\code\jsonCpp\dispositionReader.h           | C++      |         38 |          9 |          6 |         53 |
+| d:\qtproject\FeiQ2\code\logs\logs.cpp                         | C++      |         42 |         14 |          3 |         59 |
+| d:\qtproject\FeiQ2\code\logs\logs.h                           | C++      |         24 |          3 |          1 |         28 |
+| d:\qtproject\FeiQ2\code\main.cpp                              | C++      |         12 |          0 |          2 |         14 |
+| d:\qtproject\FeiQ2\code\mainwindow\mainwindow.cpp             | C++      |         49 |         17 |          4 |         70 |
+| d:\qtproject\FeiQ2\code\mainwindow\mainwindow.h               | C++      |         25 |          0 |          4 |         29 |
+| d:\qtproject\FeiQ2\code\networkModule\NetworkHelper.cpp       | C++      |         23 |          5 |          6 |         34 |
+| d:\qtproject\FeiQ2\code\networkModule\NetworkHelper.h         | C++      |         27 |          7 |          4 |         38 |
+| d:\qtproject\FeiQ2\code\networkModule\NetworkManager.cpp      | C++      |         45 |          1 |          7 |         53 |
+| d:\qtproject\FeiQ2\code\networkModule\NetworkManager.h        | C++      |         23 |          5 |          6 |         34 |
+| d:\qtproject\FeiQ2\code\networkModule\Socket.cpp              | C++      |        389 |         81 |         39 |        509 |
+| d:\qtproject\FeiQ2\code\networkModule\Socket.h                | C++      |        139 |         30 |         21 |        190 |
+| d:\qtproject\FeiQ2\code\selfDomain\SelfDomain.h               | C++      |         94 |         41 |          7 |        142 |
+| d:\qtproject\FeiQ2\code\systemInfoHelper\APIHelper.cpp        | C++      |         75 |          4 |         13 |         92 |
+| d:\qtproject\FeiQ2\code\systemInfoHelper\APIHelper.h          | C++      |         19 |          0 |          2 |         21 |
+| d:\qtproject\FeiQ2\code\systemInfoHelper\AdapterInfo.cpp      | C++      |        148 |         55 |         24 |        227 |
+| d:\qtproject\FeiQ2\code\systemInfoHelper\AdapterInfo.h        | C++      |         76 |         13 |          7 |         96 |
+| d:\qtproject\FeiQ2\code\systemInfoHelper\userLocalInfo.cpp    | C++      |         23 |          4 |          5 |         32 |
+| d:\qtproject\FeiQ2\code\systemInfoHelper\userLocalInfo.h      | C++      |         40 |          5 |          3 |         48 |
+| d:\qtproject\FeiQ2\code\task\CurrentTask.h                    | C++      |        151 |         49 |         15 |        215 |
+| d:\qtproject\FeiQ2\code\threadPool\ThreadPool.h               | C++      |         81 |          9 |          8 |         98 |
+| d:\qtproject\FeiQ2\test\BoostAsio\CMakeLists.txt              | CMake    |          0 |          0 |          1 |          1 |
+| d:\qtproject\FeiQ2\test\BoostAsio\test.cpp                    | C++      |        125 |         13 |         17 |        155 |
+| d:\qtproject\FeiQ2\test\BoostUdp\CMakeLists.txt               | CMake    |          5 |          8 |          3 |         16 |
+| d:\qtproject\FeiQ2\test\BoostUdp\test.cpp                     | C++      |         91 |          9 |         21 |        121 |
+| d:\qtproject\FeiQ2\test\CMakeLists.txt                        | CMake    |         19 |          8 |          4 |         31 |
+| d:\qtproject\FeiQ2\test\GetLocalName\test.cpp                 | C++      |         23 |          2 |          3 |         28 |
+| d:\qtproject\FeiQ2\test\GetLocalNet\CMakeLists.txt            | CMake    |          9 |          1 |          0 |         10 |
+| d:\qtproject\FeiQ2\test\GetLocalNet\test.cpp                  | C++      |        150 |         54 |         19 |        223 |
+| d:\qtproject\FeiQ2\test\boostFilesystem\main.cpp              | C++      |          0 |          0 |          1 |          1 |
+| d:\qtproject\FeiQ2\test\jsonCpp\CMakeLists.txt                | CMake    |         11 |          3 |          3 |         17 |
+| d:\qtproject\FeiQ2\test\jsonCpp\test.cpp                      | C++      |         53 |          4 |         11 |         68 |
+| d:\qtproject\FeiQ2\test\jsonCpp\test_json.json                | JSON     |         13 |          0 |          0 |         13 |
+| Total                                                         |          |      2,482 |        570 |        344 |      3,396 |
++---------------------------------------------------------------+----------+------------+------------+------------+------------+

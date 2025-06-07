@@ -13,6 +13,8 @@ option(BUILD_BOOST_ASIO OFF)
 option(BUILD_GET_NETWORK_ADAPTER_INFO OFF)
 #boostUdp广播测试
 option(BUILD_BOOST_UDP_BROADCAST OFF)
+#openSSL测试
+option(BUILD_OPENSSL OFF)
 
 if(BUILD_BOOST_UDP_BROADCAST)
     add_subdirectory(BoostUdp)
@@ -29,3 +31,7 @@ endif()
 if(BUILD_GET_NETWORK_ADAPTER_INFO)
     add_subdirectory(GetLocalNet)
 endif()
+
+if(BUILD_OPENSSL)
+    add_subdirectory(OpenSSLtest)
+endif() 
