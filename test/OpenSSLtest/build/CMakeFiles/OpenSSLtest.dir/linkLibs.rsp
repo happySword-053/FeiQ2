@@ -1,1 +1,1 @@
-  -L"D:/qtproject/FeiQ2/test/OpenSSLtest/../../lib-common/src/OpenSSL/lib/VC/x64/MTd"  -L"D:/qtproject/FeiQ2/test/OpenSSLtest/../../lib-common/src/OpenSSL"  -lssl -lcrypto -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32 
+  -L"D:/qtproject/FeiQ2/test/OpenSSLtest/../../lib-common/lib/openssl/VC/x64/MTd"  -L"D:/qtproject/FeiQ2/test/OpenSSLtest/../../lib-common"  -lssl -lcrypto -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32 

@@ -1,6 +1,5 @@
-#ifndef DISPOSITIONREADER_H
-#define DISPOSITIONREADER_H
-#include <json/json.h>
+#pragma once
+#include "json/json.h"
 #include <fstream>
 #include <unordered_map>
 #include <string>
@@ -50,4 +49,3 @@ private:
     std::vector<std::string> getFileList(); // 获取指定路径下的所有文件列表的函数声明
 };
 
-#endif DISPOSITIONREADER_H

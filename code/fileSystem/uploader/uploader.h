@@ -8,7 +8,7 @@
 #include<cstdint>
 #include <algorithm>  // 添加标准算法头文件
 #include"../../logs/logs.h"
-#include "../../selfDomain/SelfDomain.h"
+#include "../../task/CurrentTask.h"
 
 /*
 主要是用来实现文件上传功能,同时管理上传的文件，以及对应描述符

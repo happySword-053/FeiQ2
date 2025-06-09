@@ -420,7 +420,7 @@ void UdpModule::start_recv()
         });
 }
 
-void UdpModule::broadcast(int count = 0)
+void UdpModule::broadcast(int count)
 {
     if (count >= 3)
     {
@@ -432,7 +432,7 @@ void UdpModule::broadcast(int count = 0)
             {
                 ThreadPool::getInstance().enqueue(
                     &TcpModule::connect_by_udpEndpoint,
-                    self->tcpModule,
+                    &self->tcpModule,
                     self->endpoints_
                 );
             }

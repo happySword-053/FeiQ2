@@ -1,0 +1,3 @@
+D:\Cmake_dir\bin\cmake.exe -E rm -f CMakeFiles\FeiQ2.dir/objects.a
+D:\qt\Tools\mingw1310_64\bin\ar.exe qc CMakeFiles\FeiQ2.dir/objects.a @CMakeFiles\FeiQ2.dir\objects1.rsp
+D:\qt\Tools\mingw1310_64\bin\g++.exe -mwindows -Wl,--whole-archive CMakeFiles\FeiQ2.dir/objects.a -Wl,--no-whole-archive -o FeiQ2.exe -Wl,--out-implib,libFeiQ2.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\FeiQ2.dir\linkLibs.rsp

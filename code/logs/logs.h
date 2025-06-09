@@ -19,7 +19,7 @@ public:
     void log_append(const std::string& message,int type);// 记录日志
 private:
     //禁用默认构造函数和复制构造函数，防止外部实例化
-    Logs(){};
+    Logs();
     ~Logs(){logFile.close();};  
     Logs(const Logs&) = delete;
     //禁用赋值运算符，防止外部赋值

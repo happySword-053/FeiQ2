@@ -1,5 +1,6 @@
 #include "APIHelper.h"
 
+
 std::string APIHelper::WCharToString(const wchar_t *wstr)
 {
     if (!wstr) return {};  // 空指针直接返回空字符串
@@ -34,12 +35,13 @@ std::string APIHelper::calculate_broadcast(const std::string &cidr)
 {
     size_t slash_pos = cidr.find('/');
     if (slash_pos == std::string::npos) {
-        throw std::invalid_argument("Invalid CIDR format: missing '/'");
+        throw std::invalid_argument("Invalid CIDR format");
     }
 
     std::string ip_part = cidr.substr(0, slash_pos);
     std::string prefix_part = cidr.substr(slash_pos + 1);
 
+    // 假设 parse_ipv4 是 APIHelper 类的成员函数，这里使用 this 指针来调用
     uint32_t ip = parse_ipv4(ip_part);
     int prefix = std::stoi(prefix_part);
 

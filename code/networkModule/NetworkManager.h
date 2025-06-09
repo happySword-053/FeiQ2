@@ -14,7 +14,7 @@ private:
 public:
     /*----------构造函数-----*/
     explicit NetworkManager(QObject *parent = nullptr);  // 构造函数，初始化 tcpModule 和 udpModule
-    ~NetworkManager();  // 析构函数，释放资源
+    ~NetworkManager(){}  // 析构函数，释放资源
 
 
 private:

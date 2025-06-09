@@ -41,7 +41,7 @@ public:
         static UserInfoHelper instance;
         return instance;
     }
-    ~UserInfoHelper();
+    ~UserInfoHelper(){}
     UserInfo getUserInfo(){return this->userInfo;}
     void setUserName(std::string userName){this->userInfo.userName = userName;}
 

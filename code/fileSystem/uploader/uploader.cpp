@@ -40,7 +40,7 @@ std::vector<char> Uploader::getFileBlock(const std::string &filename, uint32_t b
     先检查参数是否合理
     */
     auto it = std::find_if(filelist.begin(), filelist.end(), [&](const UploadFile& file) {
-        return file.fileinfo.filename == filename; 
+        return file.fileinfo.fileName == filename; 
     });
     //未找到文件
     if (it == filelist.end()) {
@@ -50,7 +50,7 @@ std::vector<char> Uploader::getFileBlock(const std::string &filename, uint32_t b
         throw std::runtime_error("无法找到指定文件");
     }
     //判断块id是否溢出
-    if(blockId * BLOCK_SIZE >= (*it).fileinfo.filesize){
+    if(blockId * BLOCK_SIZE >= (*it).fileinfo.fileSize){
         LOG(
             "块id超出文件大小范围",ERROR 
         );
@@ -87,7 +87,7 @@ std::vector<char> Uploader::getFileBlock(const std::string &filename, uint32_t b
         throw std::runtime_error("读取文件块失败");
     }
     FileBlock fileblock;
-    fileblock.fileinfo = (*it).fileinfo; // 复制文件信息到fileblock中
+    fileblock.blockId = blockId; // 设置blockId
     fileblock.data = buffer; // 复制文件数据到fileblock中
     //序列化fileblock
     auto fileblockBuffer = fileblock.serialize();
@@ -106,7 +106,7 @@ std::vector<struct FileInfo> Uploader::getFileList()
 bool Uploader::delFile(const std::string &filename)
 {
     auto it = std::find_if(filelist.begin(), filelist.end(), [&](const UploadFile& file) {
-        return file.fileinfo.filename == filename; 
+        return file.fileinfo.fileName == filename; 
     });
     //未找到文件
     if (it == filelist.end()) {

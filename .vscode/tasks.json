@@ -38,9 +38,9 @@
             "command": "D:\\Cmake_dir\\bin\\cmake.exe",
             "args": [
                 "-S",
-                "D:/qtproject/FeiQ2",
+                "${workspaceFolder}",
                 "-B",
-                "D:/qtproject/FeiQ2/build",
+                "${workspaceFolder}/build",
                 "-G",
                 "MinGW Makefiles",
                 "-DCMAKE_CXX_COMPILER=D:\\qt\\Tools\\mingw1310_64\\bin\\g++.exe"
@@ -54,7 +54,7 @@
             "command": "D:\\Cmake_dir\\bin\\cmake.exe",
             "args": [
                 "--build",
-                "D:/qtproject/FeiQ2/build",
+                "${workspaceFolder}/build",
                 "--target",
                 "all"
             ],
@@ -70,7 +70,7 @@
             "command": "cmake",
             "args": [
                 "--build",
-                "D:/qtproject/FeiQ2/build",
+                "${workspaceFolder}/build",
                 "--target",
                 "clean"
             ],

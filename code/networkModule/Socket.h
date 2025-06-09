@@ -31,15 +31,14 @@ private:
     std::mutex write_mtx_;
     bool write_in_progress_ = false;  // 新增：标记是否正在写操作
     // 用于串行化所有 async 写操作（推荐）
-    boost::asio::strand<boost::asio::io_context::executor_type>  strand_;
+    boost::asio::strand<boost::asio::any_io_executor>  strand_;
 
     std::function<void(std::vector<char>&&)> on_data_control_;  // 用于处理数据的回调函数
     std::function<void()> on_stop_;//用于处理停止的回调函数
 public:
-    Session(boost::asio::ip::tcp::socket &&socket) : socket_(std::move(socket)) {
-        // 初始化 strand_，使用 socket 的执行器
-        strand_ = boost::asio::make_strand(socket_.get_executor());
-    }  // 构造函数
+    Session(boost::asio::ip::tcp::socket &&socket) : 
+    socket_(std::move(socket)),
+    strand_(socket_.get_executor())  {}  // 构造函数
     //移动构造函数
     Session(Session&& other) noexcept : socket_(std::move(other.socket_)) {
         // 移动其他对象的成员变量到当前对象

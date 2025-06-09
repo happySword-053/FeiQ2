@@ -1,8 +1,8 @@
 #pragma once
 // 定义宏：减少Windows头文件冗余包含（移除不常用的API）
 #define WIN32_LEAN_AND_MEAN
-// 定义Windows版本（最低支持Vista及以上系统）
-#define _WIN32_WINNT 0x0600
+// // 定义Windows版本（最低支持Vista及以上系统）
+// #define _WIN32_WINNT 0x0600
 
 #include "APIHelper.h"
 #include"../logs/logs.h"
@@ -17,6 +17,7 @@
 #include <vector>        // 动态数组容器
 #include <string>        // 字符串处理
 #include <iostream>      // C++标准输入输出（用户要求替换printf的核心）
+#include <sstream>       // 字符串流（用于序列化）
 // 显式链接Windows网络库（编译时自动链接）
 #pragma comment(lib, "iphlpapi.lib")  // IP Helper库（GetAdaptersAddresses等）
 #pragma comment(lib, "ws2_32.lib")    // Windows Sockets库（WSAStartup等）
