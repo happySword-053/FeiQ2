@@ -1,0 +1,3 @@
+D:\Cmake_dir\bin\cmake.exe -E rm -f CMakeFiles\sqlliteTest.dir/objects.a
+C:\PROGRA~2\mingw64\bin\ar.exe qc CMakeFiles\sqlliteTest.dir/objects.a @CMakeFiles\sqlliteTest.dir\objects1.rsp
+C:\PROGRA~2\mingw64\bin\C__~1.EXE -Wl,--whole-archive CMakeFiles\sqlliteTest.dir/objects.a -Wl,--no-whole-archive -o sqlliteTest.exe -Wl,--out-implib,libsqlliteTest.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\sqlliteTest.dir\linkLibs.rsp

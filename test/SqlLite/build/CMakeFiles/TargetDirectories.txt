@@ -1,0 +1,3 @@
+D:/qtproject/FeiQ2/test/SqlLite/build/CMakeFiles/sqlliteTest.dir
+D:/qtproject/FeiQ2/test/SqlLite/build/CMakeFiles/edit_cache.dir
+D:/qtproject/FeiQ2/test/SqlLite/build/CMakeFiles/rebuild_cache.dir

@@ -91,3 +91,40 @@ uint32_t APIHelper::parse_ipv4(const std::string &ip_str)
 
     return ip;
 }
+
+uint64_t APIHelper::macToUint64(const std::string &macStr)
+{
+    uint64_t mac = 0;
+    unsigned int byte;
+    char colon;
+    std::istringstream iss(macStr);
+    
+    // 解析6个字节和5个冒号
+    for (int i = 0; i < 6; ++i) {
+        if (!(iss >> std::hex >> byte)) return false;
+        mac = (mac << 8) | byte;
+        
+        // 除最后一个字节外，每个字节后应有一个-号
+        if (i < 5 && !(iss >> colon) || (colon != '-')) return false;
+    }
+    
+    // 检查是否有多余字符
+    if (iss.rdbuf()->in_avail() != 0) return false;
+    
+    
+    return mac;
+}
+
+std::string APIHelper::uint64ToMacString(uint64_t mac)
+{
+    std::ostringstream oss;
+    oss << std::hex << std::setfill('0');
+    
+    // 提取每个字节并格式化为两位十六进制
+    for (int i = 5; i >= 0; --i) {
+        oss << std::setw(2) << ((mac >> (i * 8)) & 0xFF);
+        if (i > 0) oss << '-';
+    }
+    
+    return oss.str();
+}
