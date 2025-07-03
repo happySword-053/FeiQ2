@@ -52,7 +52,7 @@ std::vector<char> Uploader::getFileBlock(const std::string &filename, uint32_t b
     //判断块id是否溢出
     if(blockId * BLOCK_SIZE >= (*it).fileinfo.fileSize){
         LOG(
-            "块id超出文件大小范围",ERROR 
+            "块id超出文件大小范围",ERROR  
         );
         throw std::runtime_error("块id超出文件大小范围");
     }    
@@ -69,13 +69,18 @@ std::vector<char> Uploader::getFileBlock(const std::string &filename, uint32_t b
 
             LOG(std::string("成功获取文件块") + filename + "的第" + std::to_string(blockId) + "块",INFO); 
          }else{
-            LOG(std::string("获取文件块") + filename + "的第" + std::to_string(blockId) + "块失败",ERROR);
+            LOG(std::string("获取文件块") + filename + "的第" + std::to_string(blockId) + "块失败，或许是在读最后一块",ERROR);
             std::streamsize bytesRead = this_filedesc.gcount();
+            if(bytesRead == -1){
+                LOG("读取文件块失败",ERROR);
+                throw std::runtime_error("读取文件块失败"); 
+            }
             if(bytesRead == 0){
                 LOG("文件读取结束",INFO);
                 //返回空的vector<char>
                 return std::vector<char>(); 
             }
+            
             buffer.resize(bytesRead); // 调整buffer大小以适应实际读取的字节数
             this_filedesc.read(buffer.data(), bytesRead);
          }

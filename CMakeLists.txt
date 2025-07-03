@@ -34,13 +34,13 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 # 递归查找所有源文件、头文件和 UI 文件
 file(GLOB_RECURSE SOURCES "code/*.cpp")
 file(GLOB_RECURSE HEADERS "code/*.h")
-file(GLOB UI_FILE "ui/*.ui")
+
 
 # 将所有文件添加到项目源文件列表中
 set(PROJECT_SOURCES
     ${SOURCES}
     ${HEADERS}
-    ${UI_FILE}
+
     source/image.qrc
 )
 

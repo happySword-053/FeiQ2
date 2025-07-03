@@ -1,0 +1,12 @@
+{
+  "personalInfo": {
+    "username": "user123",
+    "signature": "热爱生活，专注工作",
+    "workPhone": "+86-10-1234-5678",
+    "homePhone": "+86-10-8765-4321",
+    "personalPhone": "13800138000",
+    "email": "user123@example.com",
+    "address": "中国北京市朝阳区XX路XX号XX单元",
+    "qq": "123456789"
+  }
+}

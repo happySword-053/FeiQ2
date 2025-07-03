@@ -2,6 +2,8 @@
 #include"uploader/uploader.h"
 #include"downloader/downloader.h"
 #include<QObject>
+#include"../threadPool/ThreadPool.h"
+#include<vector>
 
 class FileSystem : public QObject {
     Q_OBJECT

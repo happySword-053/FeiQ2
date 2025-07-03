@@ -9,11 +9,26 @@
 #include<memory>
 #include<future>
 #include<type_traits>
+#include<unordered_map>
 
-class ThreadPool {
+
+/*文件上传和下载共用三个线程*/
+//用于文件系统的线程池，线程数量最多三个
+class FileSystemThreadPool {
+private:
+    std::mutex mapMutex; // 保护映射表的互斥锁
+    std::unordered_map<std::string, std::shared_ptr<std::atomic<bool>>> stopFlag; // 文件名到停止标志的映射
+    std::vector<std::thread> workers;  // 线程池中的线程
+    std::queue<std::function<void()>> tasks;  // 任务队列
+    std::mutex queue_mutex;  // 任务队列的互斥锁
+    std::condition_variable condition;  // 条件变量，用于线程间的同步
+    std::atomic<bool> stop;  // 线程池停止标志
+};
+
+class NetThreadPool {
 private:
     // 单例核心：私有构造函数（防止外部实例化）
-    ThreadPool(int minThreadCount = 10, int maxThreadCount = 100)
+    NetThreadPool(int minThreadCount = 10, int maxThreadCount = 100)
         : minThreadCount(minThreadCount),
           maxThreadCount(maxThreadCount),
           stop(false),
@@ -26,13 +41,14 @@ private:
     }
 
     // 禁用拷贝/移动操作
-    ThreadPool(const ThreadPool&) = delete;
-    ThreadPool& operator=(const ThreadPool&) = delete;
-    ThreadPool(ThreadPool&&) = delete;
-    ThreadPool& operator=(ThreadPool&&) = delete;
+    NetThreadPool(const NetThreadPool&) = delete;
+    NetThreadPool& operator=(const NetThreadPool&) = delete;
+    NetThreadPool(NetThreadPool&&) = delete;
+    NetThreadPool& operator=(NetThreadPool&&) = delete;
 
     // 原有成员变量保持不变
     std::vector<std::thread> workers;  // 线程池中的线程
+    std::vector<std::thread> fileWorks;//文件线程池，最多三个
     std::queue<std::function<void()>> tasks;  // 任务队列
     std::mutex queue_mutex;  // 任务队列的互斥锁
     std::condition_variable condition;  // 条件变量，用于线程间的同步
@@ -46,8 +62,8 @@ private:
 
 public:
     // 单例实例获取方法（线程安全）
-    static ThreadPool& getInstance(int minThreadCount = 10, int maxThreadCount = 100) {
-        static ThreadPool instance(minThreadCount, maxThreadCount);  // C++11 保证线程安全
+    static NetThreadPool& getInstance(int minThreadCount = 10, int maxThreadCount = 100) {
+        static NetThreadPool instance(minThreadCount, maxThreadCount);  // C++11 保证线程安全
         return instance;
     }
 
@@ -73,7 +89,7 @@ public:
         return busyThreadCount.load();
     }
 
-    ~ThreadPool() {
+    ~NetThreadPool() {
         // 原有析构逻辑（需补充线程清理等）
     }
     int init(){

@@ -1,1 +1,0 @@
--ID:/qtproject/FeiQ2/build/FeiQ2_autogen/include -ID:/qtproject/FeiQ2 -I"D:/qtproject/FeiQ2/lib-common/include" -isystem D:/qt/6.8.2/mingw_64/include/QtWidgets -isystem D:/qt/6.8.2/mingw_64/include -isystem D:/qt/6.8.2/mingw_64/include/QtCore -isystem "D:/qt/6.8.2/mingw_64/mkspecs/win32-g++" -isystem D:/qt/6.8.2/mingw_64/include/QtGui

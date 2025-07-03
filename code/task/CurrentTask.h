@@ -17,13 +17,13 @@
 #define  FILE_DOWNLOAD 3 // 文件下载
 #define FILE_BLOCK 4// 当前的文件块
 #define FILE_BLOCK_CONFIRM 5 //确认收到文件块
-#define USERINFO_AND_ADAPTERINFO 6 // 发送用户信息和网卡信息
-#define CHAT_MESSAGE 7 // 聊天文字消息
 
+/*----网络任务----*/
+#define USERINFO_AND_ADAPTERINFO 58 // 发送用户信息和网卡信息
+#define CHAT_MESSAGE 59 // 聊天文字消息
 #define UDP_BROADCAST 60 // 广播消息
 #define UDP_BROADCAST_CLOSE 61 // 下机，从udp的endpoints中移除本ip
-
-#define TCP_SEND_MESSAGE 70 // 发送消息给tcp模块
+#define TCP_SEND_MESSAGE 62 // 发送消息给tcp模块
 
 // 自定义协议
 class Info {
@@ -64,10 +64,10 @@ public:
 };
 // 表示每个文件的信息，在info类型中用vector存储上传的所有文件信息
 struct FileInfo {
-    /*|fileNameSize  |  fileName  |  fileSize*/
+    /*|fileNameSize  |  fileName  |  fileSize | userinfosize | userinfo | */
     std::string fileName;
     uint32_t fileSize;
-
+    UserInfo userInfo;
     // 序列化为 vector<char>
     std::vector<char> serialize() const {
         std::vector<char> buffer;
@@ -75,29 +75,42 @@ struct FileInfo {
         uint32_t nameLen = static_cast<uint32_t>(fileName.size());
         auto* lenPtr = reinterpret_cast<const char*>(&nameLen);
         buffer.insert(buffer.end(), lenPtr, lenPtr + sizeof(nameLen));
-
         // 写入文件名
         buffer.insert(buffer.end(), fileName.begin(), fileName.end());
         // 写入文件大小
-        auto* sizePtr = reinterpret_cast<const uint32_t*>(&fileSize);
+        auto* sizePtr = reinterpret_cast<const char*>(&fileSize);
         buffer.insert(buffer.end(), sizePtr, sizePtr + sizeof(fileSize));
+        //序列化userinfo
+        std::vector<char> userInfoBuffer = userInfo.serialize();
+        // 写入 userInfoSize
+        uint32_t userInfoSize = static_cast<uint32_t>(userInfoBuffer.size());
+        auto* userInfoSizePtr = reinterpret_cast<const char*>(&userInfoSize);
+        buffer.insert(buffer.end(), userInfoSizePtr, userInfoSizePtr + sizeof(userInfoSize));
+        // 写入 userInfo
+        buffer.insert(buffer.end(), userInfoBuffer.begin(), userInfoBuffer.end());
         return buffer;
     }
 
     // 从 vector<char> 反序列化
     static FileInfo deserialize(const std::vector<char>& buffer) {
-        FileInfo info;
+        FileInfo fileInfo;
         size_t offset = 0;
         // 读文件名长度
         uint32_t nameLen = *reinterpret_cast<const uint32_t*>(&buffer[offset]);
         offset += sizeof(nameLen);
         // 读文件名
-        info.fileName.assign(buffer.begin() + offset, buffer.begin() + offset + nameLen);
+        fileInfo.fileName.assign(buffer.begin() + offset, buffer.begin() + offset + nameLen);
         offset += nameLen;
         // 读文件大小
-        info.fileSize = *reinterpret_cast<const uint32_t*>(&buffer[offset]);
-        offset += sizeof(info.fileSize);
-        return info;
+        fileInfo.fileSize = *reinterpret_cast<const uint32_t*>(&buffer[offset]);
+        offset += sizeof(fileInfo.fileSize);
+        // 读 userInfoSize
+        uint32_t userInfoSize = *reinterpret_cast<const uint32_t*>(&buffer[offset]);
+        offset += sizeof(userInfoSize);
+        // 读 userInfo
+        std::vector<char> userInfoBuffer(buffer.begin() + offset, buffer.begin() + offset + userInfoSize);
+        fileInfo.userInfo = UserInfo::deserialize(userInfoBuffer);
+        return fileInfo;
     }
 };
 
@@ -171,6 +184,7 @@ struct FileBlock {
         return fileBlock;
     }
 };
+
 struct UserInfoAndAdapterInfo { 
     UserInfo userInfo;
     Adapter adapterInfo;

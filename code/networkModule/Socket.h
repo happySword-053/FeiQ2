@@ -167,8 +167,8 @@ public:
     {
         init();
         //向线程池提交两个运行io的线程
-        ThreadPool::getInstance().enqueue(&UdpModule::io_run,shared_from_this());
-        ThreadPool::getInstance().enqueue(&UdpModule::io_run,shared_from_this());
+        NetThreadPool::getInstance().enqueue(&UdpModule::io_run,shared_from_this());
+        NetThreadPool::getInstance().enqueue(&UdpModule::io_run,shared_from_this());
     }
     void set_on_data_control(std::function<void(std::vector<char>&&)> on_data_control) {  // 设置回调函数
         on_data_control_ = std::move(on_data_control);  // 使用 move 转移

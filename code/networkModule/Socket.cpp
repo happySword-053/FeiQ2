@@ -77,9 +77,9 @@ TcpModule::TcpModule()
     
     init();
     //向线程池提交三个运行io的线程
-    ThreadPool::getInstance().enqueue(&TcpModule::io_run,shared_from_this());
-    ThreadPool::getInstance().enqueue(&TcpModule::io_run,shared_from_this());
-    ThreadPool::getInstance().enqueue(&TcpModule::io_run,shared_from_this());
+    NetThreadPool::getInstance().enqueue(&TcpModule::io_run,shared_from_this());
+    NetThreadPool::getInstance().enqueue(&TcpModule::io_run,shared_from_this());
+    NetThreadPool::getInstance().enqueue(&TcpModule::io_run,shared_from_this());
 }
 void TcpModule::init(){
     try {
@@ -430,7 +430,7 @@ void UdpModule::broadcast(int count)
         timer.async_wait([self = shared_from_this()](const boost::system::error_code& ec) {
             if (!ec) 
             {
-                ThreadPool::getInstance().enqueue(
+                NetThreadPool::getInstance().enqueue(
                     &TcpModule::connect_by_udpEndpoint,
                     &self->tcpModule,
                     self->endpoints_
