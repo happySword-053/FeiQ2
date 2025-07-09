@@ -73,6 +73,78 @@ std::vector<char> DataProcess::encrypt(const std::vector<char> &plaintext)
 
     return result;
 }
+std::vector<char> DataProcess::compress_vector(const std::vector<char>& input) {
+    uLong src_len = static_cast<uLong>(input.size());
+    // 1. 计算最大可能的压缩后长度
+    uLong bound = compressBound(src_len);
+
+    // 2. 准备输出缓冲区，初始大小为 bound
+    std::vector<char> out(bound);
+
+    // 3. 调用 zlib 的一次性压缩接口 compress2
+    int ret = compress2(
+        reinterpret_cast<Bytef*>(out.data()),   // 输出缓冲的指针
+        &bound,                                  // 输入时代表缓冲区大小，输出后为实际写入字节数
+        reinterpret_cast<const Bytef*>(input.data()), // 输入数据指针
+        src_len,                                 // 输入数据长度
+        Z_BEST_COMPRESSION                       // 压缩级别：最高压缩比
+    );
+
+    // 4. 错误处理：非 Z_OK 则抛异常
+    if (ret != Z_OK) {
+        throw std::runtime_error("compress2 failed: error code " + std::to_string(ret));
+    }
+
+    // 5. 将输出 vector 大小缩到真实写入的 bound（由 compress2 更新）
+    out.resize(bound);
+    return out;
+}
+
+
+std::vector<char> DataProcess::decompress_vector(const std::vector<char>& compressed_data) {
+    // 1. 初始化 z_stream 结构体
+    z_stream strm;
+    std::memset(&strm, 0, sizeof(strm));
+    if (inflateInit(&strm) != Z_OK) {
+        throw std::runtime_error("zlib inflateInit failed");
+    }
+
+    // 2. 准备输出 vector，按块增长
+    std::vector<char> out;
+    const size_t chunk_size = 16384;  // 每次解压 16 KB
+    out.reserve(chunk_size);
+
+    // 3. 将输入数据指向 z_stream
+    strm.next_in  = reinterpret_cast<Bytef*>(const_cast<char*>(compressed_data.data()));
+    strm.avail_in = static_cast<uInt>(compressed_data.size());
+
+    int ret;
+    do {
+        // 4. 每次循环前在 out 末尾增加 chunk_size 空间
+        size_t old_size = out.size();
+        out.resize(old_size + chunk_size);
+
+        // 5. 设置 z_stream 的输出指针和可用空间
+        strm.next_out  = reinterpret_cast<Bytef*>(out.data() + old_size);
+        strm.avail_out = static_cast<uInt>(chunk_size);
+
+        // 6. 调用 inflate 解压一块数据
+        ret = inflate(&strm, Z_NO_FLUSH);
+        if (ret == Z_STREAM_ERROR || ret == Z_DATA_ERROR || ret == Z_MEM_ERROR) {
+            inflateEnd(&strm);
+            throw std::runtime_error("inflate failed with error code " + std::to_string(ret));
+        }
+
+        // 7. 计算本次实际写入了多少字节，并把 out 大小缩到正确位置
+        size_t have = chunk_size - strm.avail_out;
+        out.resize(old_size + have);
+
+    } while (ret != Z_STREAM_END);  // 直到遇到流结束标志
+
+    // 8. 清理状态
+    inflateEnd(&strm);
+    return out;
+}
 
 std::vector<char> DataProcess::decrypt(const std::vector<char>& input)
 {

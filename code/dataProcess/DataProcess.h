@@ -6,6 +6,9 @@
 #include<vector>
 #include <cstring>  // for memcpy
 #include <stdexcept>
+#include<zlib/zlib.h>
+#include<cstring>
+#include<memory>
 
 // 错误处理宏
 #define handle_openssl_error() \
@@ -14,7 +17,7 @@
         exit(EXIT_FAILURE); \
     } while (0)
 
-//数据加密解密模块
+//数据加密解密模块,解压缩以及压缩模块
 class DataProcess {
 private:
     const char* password = "MTM1NTI4NTAyN0BxcS5jb20=";
@@ -23,4 +26,6 @@ private:
 public:
     std::vector<char> encrypt(const std::vector<char>& plaintext);//加密函数
     std::vector<char> decrypt(const std::vector<char>& ciphertext);//解密函数
+    std::vector<char> compress_vector(const std::vector<char>& input);//压缩数据
+    std::vector<char> decompress_vector(const std::vector<char>& compressed_data);//解压数据
 };

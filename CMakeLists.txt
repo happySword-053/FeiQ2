@@ -67,6 +67,10 @@ target_include_directories(FeiQ2 PRIVATE
 target_link_directories(FeiQ2 PRIVATE
     ${THIRD_PARTY_PATH}/lib/openssl/VC/x64/MTd
 )
+#添加zlib库路径
+target_link_directories(FeiQ2 PRIVATE
+    ${THIRD_PARTY_PATH}/lib/zlib
+)
 
 # 链接所有需要的库
 target_link_libraries(FeiQ2 PRIVATE
@@ -89,6 +93,10 @@ target_link_libraries(FeiQ2 PRIVATE
     iphlpapi     # IP Helper API
     Crypt32      # Windows CryptoAPI
     kernel32     # 核心系统库
+
+    #5.zlib
+    zlibstatic
+   
 )
 
 # 添加自定义命令，在构建后将 OpenSSL 的 DLL 复制到输出目录

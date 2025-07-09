@@ -1,0 +1,3 @@
+D:\Cmake_dir\bin\cmake.exe -E rm -f CMakeFiles\Front.dir/objects.a
+D:\qt\Tools\mingw1310_64\bin\ar.exe qc CMakeFiles\Front.dir/objects.a @CMakeFiles\Front.dir\objects1.rsp
+D:\qt\Tools\mingw1310_64\bin\g++.exe -DQT_QML_DEBUG -g -Wl,--whole-archive CMakeFiles\Front.dir/objects.a -Wl,--no-whole-archive -o Front.exe -Wl,--out-implib,libFront.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\Front.dir\linkLibs.rsp

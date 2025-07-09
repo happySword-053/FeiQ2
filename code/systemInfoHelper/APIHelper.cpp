@@ -57,6 +57,8 @@ std::string APIHelper::calculate_broadcast(const std::string &cidr)
     return ip_to_string(broadcast);
 }
 
+
+
 std::string APIHelper::ip_to_string(uint32_t ip)
 {
     return std::to_string((ip >> 24) & 0xFF) + "." +

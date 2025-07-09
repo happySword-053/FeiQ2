@@ -1,0 +1,3 @@
+D:\Cmake_dir\bin\cmake.exe -E rm -f CMakeFiles\ZlibTest.dir/objects.a
+C:\PROGRA~2\mingw64\bin\ar.exe qc CMakeFiles\ZlibTest.dir/objects.a @CMakeFiles\ZlibTest.dir\objects1.rsp
+C:\PROGRA~2\mingw64\bin\C__~1.EXE -Wl,--whole-archive CMakeFiles\ZlibTest.dir/objects.a -Wl,--no-whole-archive -o ZlibTest.exe -Wl,--out-implib,libZlibTest.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\ZlibTest.dir\linkLibs.rsp

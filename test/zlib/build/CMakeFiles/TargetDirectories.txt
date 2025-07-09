@@ -1,0 +1,3 @@
+D:/qtproject/FeiQ2/test/zlib/build/CMakeFiles/ZlibTest.dir
+D:/qtproject/FeiQ2/test/zlib/build/CMakeFiles/edit_cache.dir
+D:/qtproject/FeiQ2/test/zlib/build/CMakeFiles/rebuild_cache.dir

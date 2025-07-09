@@ -4,6 +4,10 @@
 #include<QObject>
 #include"../MyControl/MetaDataDefine.h"
 #include"../dataProcess/DataProcess.h"
+/*
+网络传输层入口，只负责接收和传输vector<char>类型的数据，从网络层接收，传输至网络层
+由高层将数据加密解密
+*/
 class NetworkManager :public QObject{
     Q_OBJECT
 private:
