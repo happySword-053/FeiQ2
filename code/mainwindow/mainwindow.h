@@ -14,7 +14,10 @@
 #include <QScrollBar>
 #include <QListWidgetItem>
 #include <QMainWindow>
-#include"FriendItemWidget.h"
+#include<QMap>
+#include"../MyControl/MyWidget/FriendChatWidget.h"
+#include"../MyControl/MyWidget/FriendItemWidget.h"
+#include"../MyControl/MyWidget/MessageBubble.h"
 #include"sharefilemanagerwidget.h"
 #include"settingswidget.h"
 // QT_BEGIN_NAMESPACE
@@ -22,160 +25,57 @@
 // class MainWindow;
 // }
 // QT_END_NAMESPACE
-// 用来自定义“好友列表”中每一行的 Widget
+// 注释掉的UI命名空间，可能是Qt Designer生成的代码
 
-class MainWindow : public QMainWindow
+class MainWindow : public QMainWindow  // 定义MainWindow类，继承自QMainWindow
 {
-    Q_OBJECT
+    Q_OBJECT  // Qt元对象宏，支持信号槽机制
 
 public:
-    MainWindow(QWidget *parent = nullptr); // 构造函数
-    ~MainWindow();                         // 析构函数
+    MainWindow(QWidget *parent = nullptr); // 构造函数声明，parent为父窗口指针
+    ~MainWindow();                         // 析构函数声明
+
+private slots:
+    void onScrollBarValueChanged(int value); // 滚动条值变化的槽函数声明
 
 private:
-    //Ui::MainWindow *ui; // UI界面指针
-    std::function<void()> friendsInterface;// 好友列表相关接口  回调函数
+    // Ui::MainWindow *ui; // 注释掉的UI指针，可能是Qt Designer生成的
+    std::function<void()> friendsInterface; // 好友列表相关接口的回调函数
 
-    private slots:
+private slots:
     // 当切换好友时，清除该好友未读气泡
-    void onFriendSelectionChanged(QListWidgetItem *current, QListWidgetItem *previous) {
-        Q_UNUSED(previous);
-        if (!current) return;
-        auto *fw = static_cast<FriendItemWidget*>(m_friendList->itemWidget(current));
-        if (fw) {
-            fw->clearUnread();
-        }
-        // （此处未实现切换好友后加载实际聊天记录，只示范清空未读气泡）
-    }
+    void onFriendSelectionChanged(QListWidgetItem *current, QListWidgetItem *previous);
 
-    // 点击“发送”
-    void onSendClicked() {
-        QString text = m_inputEdit->toPlainText().trimmed();
-        if (text.isEmpty()) return;
+    // 点击“发送”按钮的槽函数
+    void onSendClicked();
 
-        // 当前好友名称
-        QListWidgetItem *currentItem = m_friendList->currentItem();
-        QString friendName;
-        if (currentItem) {
-            auto *fiw = static_cast<FriendItemWidget*>(m_friendList->itemWidget(currentItem));
-            friendName = fiw->getName();
-        } else {
-            friendName = "Unknown";
-        }
-
-        insertOutgoingMessage(friendName, text);
-        m_inputEdit->clear();
-
-        // 滚动到底部
-        QScrollBar *bar = m_scrollArea->verticalScrollBar();
-        bar->setValue(bar->maximum());
-    }
-
-    // 点击“模拟接收”
-    void onSimulateReceive() {
-        const QString simulatedSender = "Alice";
-        const QString simulatedText   = "这是来自 Alice 的新消息！";
-
-        // 找到 Alice 对应的列表项
-        for (int i = 0; i < m_friendList->count(); ++i) {
-            QListWidgetItem *item = m_friendList->item(i);
-            auto *fiw = static_cast<FriendItemWidget*>(m_friendList->itemWidget(item));
-            if (fiw && fiw->getName() == simulatedSender) {
-                if (item == m_friendList->currentItem()) {
-                    // 如果 Alice 正在聊天，就直接显示消息
-                    insertIncomingMessage(simulatedSender, simulatedText);
-                    QScrollBar *bar = m_scrollArea->verticalScrollBar();
-                    bar->setValue(bar->maximum());
-                } else {
-                    // 如果没在聊天，增加未读气泡
-                    fiw->incrementUnread();
-                }
-                break;
-            }
-        }
-    }
+    // 点击“模拟接收”按钮的槽函数
+    void onSimulateReceive();
 
 private:
     // 插入“对方”消息（左对齐，黄色气泡）
-    void insertIncomingMessage(const QString &sender, const QString &content) {
-        // 1) 头部 [HH:mm:ss] Sender
-        QString timeStr = QDateTime::currentDateTime().toString("HH:mm:ss");
-        QLabel *header = new QLabel(QString("[%1] %2").arg(timeStr).arg(sender));
-        header->setStyleSheet("color: #555; font-size:12px;");
+    void insertIncomingMessage(const QString &sender, const QString &content) ;
 
-        QWidget *headerContainer = new QWidget;
-        QHBoxLayout *headerHL = new QHBoxLayout(headerContainer);
-        headerHL->setContentsMargins(0, 0, 0, 0);
-        headerHL->setSpacing(0);
-        headerHL->addWidget(header);
-        headerHL->addStretch(1);  // 左对齐
+    // 插入“我”发送的消息（右对齐，蓝色气泡）
+    void insertOutgoingMessage(const QString &friendName, const QString &content);
 
-        // 2) 气泡正文（黄色背景）
-        QLabel *bubble = new QLabel(content);
-        bubble->setWordWrap(true);
-        bubble->setStyleSheet(
-            "background: #fff1a8; "
-            "padding:6px; "
-            "border-radius:4px; "
-            "font-size:14px;"
-        );
-        QWidget *bubbleContainer = new QWidget;
-        QHBoxLayout *bubbleHL = new QHBoxLayout(bubbleContainer);
-        bubbleHL->setContentsMargins(0, 0, 0, 0);
-        bubbleHL->setSpacing(0);
-        bubbleHL->addWidget(bubble);
-        bubbleHL->addStretch(1);  // 左对齐
+    // 向中控模块发送获取好友历史聊天记录(首次获取历史记录)
+    std::function<void()> getFriendHistory;
 
-        m_chatLayout->addWidget(headerContainer);
-        m_chatLayout->addWidget(bubbleContainer);
-    }
-
-    // 插入“我”消息（右对齐，蓝色气泡）
-    void insertOutgoingMessage(const QString &friendName, const QString &content) {
-        // 1) 头部 [HH:mm:ss] Me → friendName
-        QString timeStr = QDateTime::currentDateTime().toString("HH:mm:ss");
-        QLabel *header = new QLabel(QString("[%1] %2").arg(timeStr).arg("Me → " + friendName));
-        header->setStyleSheet("color: #555; font-size:12px;");
-
-        QWidget *headerContainer = new QWidget;
-        QHBoxLayout *headerHL = new QHBoxLayout(headerContainer);
-        headerHL->setContentsMargins(0, 0, 0, 0);
-        headerHL->setSpacing(0);
-        headerHL->addStretch(1);    // 右对齐
-        headerHL->addWidget(header);
-
-        // 2) 气泡正文（蓝色背景）
-        QLabel *bubble = new QLabel(content);
-        bubble->setWordWrap(true);
-        bubble->setStyleSheet(
-            "background:#d0eaff; "
-            "padding:6px; "
-            "border-radius:4px; "
-            "font-size:14px;"
-        );
-        QWidget *bubbleContainer = new QWidget;
-        QHBoxLayout *bubbleHL = new QHBoxLayout(bubbleContainer);
-        bubbleHL->setContentsMargins(0, 0, 0, 0);
-        bubbleHL->setSpacing(0);
-        bubbleHL->addStretch(1);      // 右对齐
-        bubbleHL->addWidget(bubble);
-
-        m_chatLayout->addWidget(headerContainer);
-        m_chatLayout->addWidget(bubbleContainer);
-    }
-
-private:
-    QListWidget   *m_friendList;
-    QWidget       *m_chatArea;
-    QVBoxLayout   *m_chatLayout;
-    QScrollArea   *m_scrollArea;
-    QTextEdit     *m_inputEdit;
-    QPushButton   *m_sendBtn;
-    QPushButton   *m_simulateBtn;
-    // 分享文件管理窗口
-    ShareFileManagerWidget *shareFileManagerWidget;
-    // 设置窗口
-    SettingsWidget *settingsWidget;
+    // 向中控模块发送获取好友历史聊天记录(获取更多历史记录)
+    std::function<void()> getFriendHistoryByTime;
     
+private:
+    QListWidget   *m_friendList; // 好友列表控件指针
+    QWidget       *m_chatArea;   // 聊天区域控件指针
+    QVBoxLayout   *m_chatLayout; // 聊天区域布局指针
+    QScrollArea   *m_scrollArea; // 滚动区域控件指针
+    QTextEdit     *m_inputEdit;  // 输入框控件指针
+    QPushButton   *m_sendBtn;    // 发送按钮指针
+    QPushButton   *m_simulateBtn;// 模拟接收按钮指针
+    ShareFileManagerWidget *shareFileManagerWidget; // 文件共享管理窗口指针
+    SettingsWidget *settingsWidget; // 设置窗口指针
+    QMap<QListWidgetItem *, QWidget *> m_friendWidgets; // 好友控件映射表
 };
-#endif // MAINWINDOW_H
+
+#endif // MAINWINDOW_H  // 头文件结束宏

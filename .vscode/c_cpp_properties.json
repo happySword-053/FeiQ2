@@ -12,7 +12,8 @@
                 "${workspaceFolder}/lib-common/include/openssl",
                 "D:/qt/6.8.2/mingw_64/include",
                 "${workspaceFolder}/lib-common/include",
-                "${workspaceFolder}/lib-common/include/sqllite"
+                "${workspaceFolder}/lib-common/include/sqllite",
+                "D:/qt/6.8.2/mingw_64/include/QtWidgets"
             ],
             "defines": [
                 "_DEBUG",

@@ -4,6 +4,7 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QPushButton>
+// 好友项控件，用于显示好友头像、名称和未读消息数量
 class FriendItemWidget : public QWidget {
     Q_OBJECT
 

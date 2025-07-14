@@ -5,11 +5,14 @@
 #include <list>
 #include <stdexcept> // 用于 std::runtime_error
 #include "../logs/logs.h"
-#include "../task/Mapper.h"
-
+#include"../Mapper/Mapper.h"
 extern "C" {
 #include "sqlite3.h"
 }
+
+#ifndef DB_CONFIG_FILE_PATH
+#define DB_CONFIG_FILE_PATH "../config/chat.db" //一般CWD在build目录
+#endif
 
 class SqlLite {
 private:
@@ -23,11 +26,15 @@ private:
                               ");";
     // 创建消息表
     const char* sql_message = "CREATE TABLE IF NOT EXISTS messages ("
-                              "mac INTEGER PRIMARY KEY AUTOINCREMENT, "
-                              "content TEXT NOT NULL, "
-                              "timestamp DATETIME DEFAULT CURRENT_TIMESTAMP"
+                              "id INTEGER PRIMARY KEY AUTOINCREMENT, "// 消息ID
+                              "mac VARCHAR(17) NOT NULL , "// 对方的mac地址
+                            //   "mac_self INTEGER NOT NULL, " // 自己的mac地址
+                              "content TEXT NOT NULL, "// 消息内容
+                              "is_self BOOLEAN NOT NULL,"// 0 表示不是自己发的，1 表示自己发的
+                              "timestamp DATETIME DEFAULT CURRENT_TIMESTAMP"// 消息时间戳
                               ");";
-
+    const char* sql_message_index = "CREATE INDEX IF NOT EXISTS idx_messages_session_id "
+                                    "ON messages (mac, timestamp);";
     // --- 可变参数模板辅助函数，用于安全地绑定参数 ---
 
     // 基础情况：没有参数需要绑定时，直接返回
@@ -76,10 +83,24 @@ private:
             LOG(error.c_str(), ERROR);
             throw std::runtime_error(error);
         }
-    }
 
+        rc = sqlite3_exec(chat_db, sql_message_index, 0, 0, &err_msg);
+        if (rc != SQLITE_OK) {
+            std::string error = std::string("创建消息表索引错误: ") + err_msg;
+            sqlite3_free(err_msg);
+            LOG(error.c_str(), ERROR);
+            throw std::runtime_error(error);
+        }
+    }
+    SqlLite(){
+        if (open_db(DB_CONFIG_FILE_PATH) != 0) {
+            LOG("打开数据库失败,设置的路径为" + std::string(DB_CONFIG_FILE_PATH), ERROR);
+            throw std::runtime_error("打开数据库失败，设置的路径为" + std::string(DB_CONFIG_FILE_PATH));
+        }
+        LOG("打开数据库成功", INFO);
+    }
 public:
-    SqlLite() = default;
+    
 
     ~SqlLite() {
         if (chat_db) {
@@ -107,8 +128,8 @@ public:
     }
 
     // 安全且灵活的查询函数
-    template<typename T, typename... Args>
-    std::list<T> query(const char* sql, Args&&... args) {
+    template<typename T, typename M = Mapper<T>, typename... Args>
+    std::list<T> query(const char* sql, M& _mapper, Args&&... args) {
         sqlite3_stmt* stmt = nullptr;
         if (sqlite3_prepare_v2(chat_db, sql, -1, &stmt, nullptr) != SQLITE_OK) {
             std::string error = std::string("查询预编译错误: ") + sqlite3_errmsg(chat_db);
@@ -121,8 +142,9 @@ public:
         std::list<T> result;
         int rc;
         while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
-            T item;
-            item.Mapper(stmt);
+            //映射do对象
+            T item = _mapper.mapper(stmt);
+            //item.mapper(stmt);
             result.push_back(item); // 修复了 Bug：将 item 添加到结果列表
         }
 
@@ -154,5 +176,11 @@ public:
             throw std::runtime_error(error);
         }
         sqlite3_finalize(stmt);
+    }
+
+    // 获取单例实例
+    static SqlLite& getInstance() {
+        static SqlLite instance; // 静态局部变量，C++11后线程安全
+        return instance;
     }
 };

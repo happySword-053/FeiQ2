@@ -3,93 +3,88 @@
 
 // MainWindow 构造函数
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    //, ui(new Ui::MainWindow)
+    : QMainWindow(parent) // 初始化父类QMainWindow
+    //, ui(new Ui::MainWindow) // 注释掉的UI初始化
 {
-    //ui->setupUi(this); // 初始化UI界面 (由 .ui 文件生成)
-    // 中央 Widget
-    QWidget *central = new QWidget(this);
-    setCentralWidget(central);
+    //ui->setupUi(this); // 注释掉的UI设置
+    QWidget *central = new QWidget(this); // 创建中央部件
+    setCentralWidget(central); // 设置中央部件
 
-    // 整体水平分割：左侧好友列表 + 右侧（再拆分为聊天主区 + 侧栏）
+    // 创建水平分割器：左侧好友列表 + 右侧内容区
     QSplitter *splitter = new QSplitter(Qt::Horizontal, central);
 
-    //文件共享管理界面
+    // 创建文件共享管理界面
     this->shareFileManagerWidget = new ShareFileManagerWidget();
-    //设置窗口
+    // 创建设置窗口
     this->settingsWidget = new SettingsWidget();
-    
+
     // -----------------------
     // 1) 左侧：好友列表
     // -----------------------
-    m_friendList = new QListWidget(splitter);
-    m_friendList->setMinimumWidth(160);
-    m_friendList->setFrameShape(QFrame::NoFrame);
+    m_friendList = new QListWidget(splitter); // 创建好友列表控件
+    m_friendList->setMinimumWidth(160); // 设置最小宽度
+    m_friendList->setFrameShape(QFrame::NoFrame); // 设置无边框
     m_friendList->setStyleSheet(
         "QListWidget { background: #fafafa; }"
         "QListWidget::item:selected { background: #d0e7ff; }"
-    );
+    ); // 设置样式表
+    /*--------------可以后续添加加载好友逻辑，以下只是示例---------------------*/
+    // // 示例好友数据    
+    // QStringList names = { "Alice", "Bob", "Charlie", "David", "Eve" };
+    // for (const QString &name : names) { // 遍历好友名称列表
+    //     QListWidgetItem *item = new QListWidgetItem(m_friendList); // 创建列表项
+    //     item->setSizeHint(QSize(0, 48)); // 设置项高度
+    //     m_friendList->addItem(item); // 添加项到列表
 
-    // 示例好友
-    QStringList names = { "Alice", "Bob", "Charlie", "David", "Eve" };
-    for (const QString &name : names) {
-        QListWidgetItem *item = new QListWidgetItem(m_friendList);
-        item->setSizeHint(QSize(0, 48));
-        m_friendList->addItem(item);
-
-        FriendItemWidget *w = new FriendItemWidget(name);
-        m_friendList->setItemWidget(item, w);
-    }
-    m_friendList->setCurrentRow(0);
-
-    // 切换好友时清空未读
-    connect(m_friendList, &QListWidget::currentItemChanged,
-            this, &MainWindow::onFriendSelectionChanged);
+    //     FriendItemWidget *w = new FriendItemWidget(name); // 创建自定义好友项控件
+    //     m_friendList->setItemWidget(item, w); // 为列表项设置控件
+    // }
+    // m_friendList->setCurrentRow(0); // 设置默认选中第一行
 
     // -----------------------
     // 2) 右侧整体：容器 rightContainer
     //    — 上：contentArea（水平布局：聊天主区 + 侧栏）
     //    — 下：输入区域
     // -----------------------
-    QWidget *rightContainer = new QWidget(splitter);
-    QVBoxLayout *rightLayout = new QVBoxLayout(rightContainer);
-    rightLayout->setContentsMargins(0, 0, 0, 0);
-    rightLayout->setSpacing(0);
+    QWidget *rightContainer = new QWidget(splitter); // 创建右侧容器
+    QVBoxLayout *rightLayout = new QVBoxLayout(rightContainer); // 创建垂直布局
+    rightLayout->setContentsMargins(0, 0, 0, 0); // 设置内边距
+    rightLayout->setSpacing(0); // 设置间距
 
     // 2.1) 上半部分：contentArea（聊天主区 + 侧栏）
-    QWidget *contentArea = new QWidget;
-    QHBoxLayout *contentHL = new QHBoxLayout(contentArea);
-    contentHL->setContentsMargins(0, 0, 0, 0);
-    contentHL->setSpacing(0);
+    QWidget *contentArea = new QWidget; // 创建内容区域
+    QHBoxLayout *contentHL = new QHBoxLayout(contentArea); // 创建水平布局
+    contentHL->setContentsMargins(0, 0, 0, 0); // 设置内边距
+    contentHL->setSpacing(0); // 设置间距
 
     // — 2.1.1) 聊天主区 ——
-    QWidget *chatPanel = new QWidget;                // 聊天主区容器
-    QVBoxLayout *chatPanelLayout = new QVBoxLayout(chatPanel);
-    chatPanelLayout->setContentsMargins(0, 0, 0, 0);
-    chatPanelLayout->setSpacing(0);
+    QWidget *chatPanel = new QWidget; // 创建聊天面板
+    QVBoxLayout *chatPanelLayout = new QVBoxLayout(chatPanel); // 创建垂直布局
+    chatPanelLayout->setContentsMargins(0, 0, 0, 0); // 设置内边距
+    chatPanelLayout->setSpacing(0); // 设置间距
 
     // —— 聊天消息滚动区 —— 
-    m_chatArea = new QWidget;
-    m_chatLayout = new QVBoxLayout(m_chatArea);
-    m_chatLayout->setContentsMargins(8, 8, 8, 8);
-    m_chatLayout->setSpacing(12);
-    m_chatLayout->setAlignment(Qt::AlignTop);
+    m_chatArea = new QWidget; // 创建聊天区域部件
+    m_chatLayout = new QVBoxLayout(m_chatArea); // 创建垂直布局
+    m_chatLayout->setContentsMargins(8, 8, 8, 8); // 设置内边距
+    m_chatLayout->setSpacing(12); // 设置控件间距
+    m_chatLayout->setAlignment(Qt::AlignTop); // 设置对齐方式为顶部对齐
 
     // 示例：插入一条对方示例消息（靠左，黄色气泡）
-    insertIncomingMessage("Alice", "👋 Hi there! 这是 Alice 的示例消息。");
+    //insertIncomingMessage("Alice", "👋 Hi there! 这是 Alice 的示例消息。");
 
-    m_scrollArea = new QScrollArea;
-    m_scrollArea->setWidget(m_chatArea);
-    m_scrollArea->setWidgetResizable(true);
-    m_scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    m_scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    m_scrollArea->setFrameShape(QFrame::NoFrame);
+    m_scrollArea = new QScrollArea; // 创建滚动区域
+    m_scrollArea->setWidget(m_chatArea); // 设置滚动区域的部件
+    m_scrollArea->setWidgetResizable(true); // 设置部件可调整大小
+    m_scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded); // 垂直滚动条按需显示
+    m_scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff); // 水平滚动条始终关闭
+    m_scrollArea->setFrameShape(QFrame::NoFrame); // 设置无边框
 
-    chatPanelLayout->addWidget(m_scrollArea, 1);
+    chatPanelLayout->addWidget(m_scrollArea, 1); // 将滚动区域添加到聊天面板布局
 
     // — 2.1.2) 侧栏 ——
-    QWidget *sidebar = new QWidget;
-    sidebar->setFixedWidth(120);
+    QWidget *sidebar = new QWidget; // 创建侧栏部件
+    sidebar->setFixedWidth(120); // 设置固定宽度
     sidebar->setStyleSheet("background: #f5f5f5;"); 
     QVBoxLayout *sbLayout = new QVBoxLayout(sidebar);
     sbLayout->setContentsMargins(8, 8, 8, 8);
@@ -192,3 +187,157 @@ MainWindow::~MainWindow()
     delete shareFileManagerWidget;
     delete settingsWidget;
 }
+void MainWindow::onScrollBarValueChanged(int value)
+{
+    // 如果滚动条在最顶部，并且当前没有在加载
+    if (value == 0 ) {
+        //qDebug() << "滚动到顶部，准备加载更多历史消息...";
+        //loadMoreMessages(); // 这是我们将要实现的核心函数
+        // 加载好友历史信息 
+    }
+}
+
+void MainWindow::onFriendSelectionChanged(QListWidgetItem *current, QListWidgetItem *previous) {
+        //Q_UNUSED(previous);  // 标记previous参数未使用，避免编译器警告
+        if (!current) return; // 如果当前项为空，直接返回
+        // 检查是否超过容量 超过容量将好友聊天widget删除
+        if (m_friendWidgets.size() >= 10) { 
+            // 获取m_friendWidgets第一个项的widget
+            auto it = m_friendWidgets.begin();
+            delete it.value(); // 删除widget
+            m_friendWidgets.erase(it); // 从m_friendWidgets中移除
+        }
+        // 将当前项的widget转换为FriendItemWidget类型
+        auto *fw = static_cast<FriendItemWidget*>(m_friendList->itemWidget(current));
+        if (fw) {
+            fw->clearUnread(); // 清除未读消息提示
+        }
+        // 创建一个 FriendChatWidget，为当前FriendItemWidget的value
+        FriendChatWidget *chatWidget = new FriendChatWidget();
+        m_friendWidgets[current] = chatWidget; // 将新的FriendChatWidget添加到m_friendWidgets中
+        m_scrollArea->setWidget(chatWidget); // 将新的FriendChatWidget设置为m_scrollArea的widget
+       
+        
+        
+    }
+void MainWindow::onSendClicked() {
+        QString text = m_inputEdit->toPlainText().trimmed(); // 获取输入框文本并去除首尾空格
+        if (text.isEmpty()) return; // 如果文本为空，直接返回
+
+        // 获取当前选中的好友名称
+        QListWidgetItem *currentItem = m_friendList->currentItem();
+        QString friendName;
+        if (currentItem) {
+            auto *fiw = static_cast<FriendItemWidget*>(m_friendList->itemWidget(currentItem));
+            friendName = fiw->getName(); // 获取好友名称
+        } else {
+            friendName = "Unknown"; // 如果没有选中好友，默认为"Unknown"
+        }
+
+        insertOutgoingMessage(friendName, text); // 插入发送的消息
+        m_inputEdit->clear(); // 清空输入框
+
+        // 滚动到底部
+        QScrollBar *bar = m_scrollArea->verticalScrollBar();
+        bar->setValue(bar->maximum()); // 设置滚动条值为最大值（底部）
+}
+
+void MainWindow::onSimulateReceive() {
+        const QString simulatedSender = "Alice"; // 模拟发送者名称
+        const QString simulatedText   = "这是来自 Alice 的新消息！"; // 模拟消息内容
+
+        // 遍历好友列表，找到Alice对应的项
+        for (int i = 0; i < m_friendList->count(); ++i) {
+            QListWidgetItem *item = m_friendList->item(i);
+            auto *fiw = static_cast<FriendItemWidget*>(m_friendList->itemWidget(item));
+            if (fiw && fiw->getName() == simulatedSender) {
+                if (item == m_friendList->currentItem()) {
+                    // 如果Alice是当前选中的好友，直接显示消息
+                    insertIncomingMessage(simulatedSender, simulatedText);
+                    QScrollBar *bar = m_scrollArea->verticalScrollBar();
+                    bar->setValue(bar->maximum()); // 滚动到底部
+                } else {
+                    // 如果不是当前选中的好友，增加未读气泡
+                    fiw->incrementUnread();
+                }
+                break; // 找到后跳出循环
+            }
+        }
+    }
+void MainWindow::insertOutgoingMessage(const QString &friendName, const QString &content) {
+        // 1) 创建头部标签 [时间] Me → 好友名
+        QString timeStr = QDateTime::currentDateTime().toString("HH:mm:ss"); // 获取当前时间
+        QLabel *header = new QLabel(QString("[%1] %2").arg(timeStr).arg("Me → " + friendName));
+        header->setStyleSheet("color: #555; font-size:12px;"); // 设置样式
+
+        QWidget *headerContainer = new QWidget; // 创建头部容器
+        QHBoxLayout *headerHL = new QHBoxLayout(headerContainer); // 创建水平布局
+        headerHL->setContentsMargins(0, 0, 0, 0); // 设置内边距
+        headerHL->setSpacing(0); // 设置间距
+        headerHL->addStretch(1);    // 添加伸缩项，使头部右对齐
+        headerHL->addWidget(header); // 添加头部标签
+
+        // 2) 创建气泡正文（蓝色背景）
+        QLabel *bubble = new QLabel(content); // 创建内容标签
+        bubble->setWordWrap(true); // 设置自动换行
+        bubble->setStyleSheet(
+            "background:#d0eaff; "
+            "padding:6px; "
+            "border-radius:4px; "
+            "font-size:14px;"
+        ); // 设置气泡样式
+        QWidget *bubbleContainer = new QWidget; // 创建气泡容器
+        QHBoxLayout *bubbleHL = new QHBoxLayout(bubbleContainer); // 创建水平布局
+        bubbleHL->setContentsMargins(0, 0, 0, 0); // 设置内边距
+        bubbleHL->setSpacing(0); // 设置间距
+        bubbleHL->addStretch(1);      // 添加伸缩项，使气泡右对齐
+        bubbleHL->addWidget(bubble); // 添加气泡标签
+
+        // 将头部和气泡添加到聊天布局
+        m_chatLayout->addWidget(headerContainer);
+        m_chatLayout->addWidget(bubbleContainer);
+    }
+
+std::list<MessageBubble *> MainWindow::getFriendHistory(const QString &mac)
+{
+    return std::list<MessageBubble *>();
+
+
+}
+std::list<MessageBubble *> MainWindow::getFriendHistoryByTime(const QString &mac, const QString &time)
+{
+    return std::list<MessageBubble *>();
+}
+void MainWindow::insertIncomingMessage(const QString &sender, const QString &content) {
+        // 1) 创建头部标签 [时间] 发送者
+        QString timeStr = QDateTime::currentDateTime().toString("HH:mm:ss"); // 获取当前时间并格式化
+        QLabel *header = new QLabel(QString("[%1] %2").arg(timeStr).arg(sender)); // 创建标签
+        header->setStyleSheet("color: #555; font-size:12px;"); // 设置样式
+
+        QWidget *headerContainer = new QWidget; // 创建头部容器
+        QHBoxLayout *headerHL = new QHBoxLayout(headerContainer); // 创建水平布局
+        headerHL->setContentsMargins(0, 0, 0, 0); // 设置内边距为0
+        headerHL->setSpacing(0); // 设置控件间距为0
+        headerHL->addWidget(header); // 添加头部标签
+        headerHL->addStretch(1);  // 添加伸缩项，使头部左对齐
+
+        // 2) 创建气泡正文（黄色背景）
+        QLabel *bubble = new QLabel(content); // 创建内容标签
+        bubble->setWordWrap(true); // 设置自动换行
+        bubble->setStyleSheet(
+            "background: #fff1a8; "
+            "padding:6px; "
+            "border-radius:4px; "
+            "font-size:14px;"
+        ); // 设置气泡样式
+        QWidget *bubbleContainer = new QWidget; // 创建气泡容器
+        QHBoxLayout *bubbleHL = new QHBoxLayout(bubbleContainer); // 创建水平布局
+        bubbleHL->setContentsMargins(0, 0, 0, 0); // 设置内边距
+        bubbleHL->setSpacing(0); // 设置间距
+        bubbleHL->addWidget(bubble); // 添加气泡标签
+        bubbleHL->addStretch(1);  // 添加伸缩项，使气泡左对齐
+
+        // 3) 将头部和气泡添加到聊天布局
+        m_chatLayout->addWidget(headerContainer);
+        m_chatLayout->addWidget(bubbleContainer);
+    }

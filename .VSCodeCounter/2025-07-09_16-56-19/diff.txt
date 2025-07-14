@@ -1,0 +1,86 @@
+Date : 2025-07-09 16:56:19
+Directory : d:\qtproject\FeiQ2\code
+Total : 36 files,  -935 codes, -156 comments, -235 blanks, all -1326 lines
+
+Languages
++----------+------------+------------+------------+------------+------------+
+| language | files      | code       | comment    | blank      | total      |
++----------+------------+------------+------------+------------+------------+
+| JSON     |          4 |        -48 |          0 |          0 |        -48 |
+| Markdown |          1 |        -52 |          0 |        -44 |        -96 |
+| CMake    |          9 |       -155 |        -57 |        -52 |       -264 |
+| C++      |         22 |       -680 |        -99 |       -139 |       -918 |
++----------+------------+------------+------------+------------+------------+
+
+Directories
++--------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                               | files      | code       | comment    | blank      | total      |
++--------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                  |         36 |       -935 |       -156 |       -235 |     -1,326 |
+| ..                                                                 |         23 |       -942 |       -173 |       -229 |     -1,344 |
+| .. (Files)                                                         |          1 |        -65 |        -31 |        -27 |       -123 |
+| ..\setting                                                         |          3 |        -35 |          0 |          0 |        -35 |
+| ..\test                                                            |         19 |       -842 |       -142 |       -202 |     -1,186 |
+| ..\test (Files)                                                    |          1 |        -23 |         -9 |         -5 |        -37 |
+| ..\test\BoostAsio                                                  |          2 |       -125 |        -13 |        -18 |       -156 |
+| ..\test\BoostUdp                                                   |          2 |        -96 |        -17 |        -24 |       -137 |
+| ..\test\GetLocalName                                               |          1 |        -23 |         -2 |         -3 |        -28 |
+| ..\test\GetLocalNet                                                |          2 |       -159 |        -55 |        -19 |       -233 |
+| ..\test\OpenSSLtest                                                |          3 |       -191 |        -29 |        -81 |       -301 |
+| ..\test\SqlLite                                                    |          2 |        -58 |         -2 |        -14 |        -74 |
+| ..\test\boostFilesystem                                            |          1 |          0 |          0 |         -1 |         -1 |
+| ..\test\jsonCpp                                                    |          3 |        -77 |         -7 |        -14 |        -98 |
+| ..\test\zlib                                                       |          2 |        -90 |         -8 |        -23 |       -121 |
+| Mapper                                                             |          1 |          7 |          0 |          0 |          7 |
+| MyControl                                                          |          1 |        -69 |        -12 |        -11 |        -92 |
+| MyControl\MyWidget                                                 |          1 |        -69 |        -12 |        -11 |        -92 |
+| Sqlite3                                                            |          1 |          0 |          3 |         -1 |          2 |
+| infoModule                                                         |          5 |        101 |         11 |         11 |        123 |
+| infoModule (Files)                                                 |          2 |         64 |         11 |          7 |         82 |
+| infoModule\chatMessage                                             |          3 |         37 |          0 |          4 |         41 |
+| mainwindow                                                         |          2 |         -4 |         12 |          1 |          9 |
+| task                                                               |          3 |        -28 |          3 |         -6 |        -31 |
++--------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++--------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| filename                                                           | language | code       | comment    | blank      | total      |
++--------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| d:\qtproject\FeiQ2\CMakeLists.txt                                  | CMake    |        -65 |        -31 |        -27 |       -123 |
+| d:\qtproject\FeiQ2\code\Mapper\Mapper.h                            | C++      |          7 |          0 |          0 |          7 |
+| d:\qtproject\FeiQ2\code\MyControl\MyWidget\FriendItemWidget.h      | C++      |        -69 |        -12 |        -11 |        -92 |
+| d:\qtproject\FeiQ2\code\Sqlite3\SqlLite.h                          | C++      |          0 |          3 |         -1 |          2 |
+| d:\qtproject\FeiQ2\code\infoModule\FriendInfo.h                    | C++      |         53 |          5 |          2 |         60 |
+| d:\qtproject\FeiQ2\code\infoModule\SqlDao.h                        | C++      |         11 |          6 |          5 |         22 |
+| d:\qtproject\FeiQ2\code\infoModule\chatMessage\chatMessageDAO.h    | C++      |          4 |          0 |          2 |          6 |
+| d:\qtproject\FeiQ2\code\infoModule\chatMessage\chatMessageDO.h     | C++      |         18 |          0 |          2 |         20 |
+| d:\qtproject\FeiQ2\code\infoModule\chatMessage\chatMessageMapper.h | C++      |         15 |          0 |          0 |         15 |
+| d:\qtproject\FeiQ2\code\mainwindow\mainwindow.cpp                  | C++      |         -1 |          6 |          1 |          6 |
+| d:\qtproject\FeiQ2\code\mainwindow\mainwindow.h                    | C++      |         -3 |          6 |          0 |          3 |
+| d:\qtproject\FeiQ2\code\task\Mapper.h                              | C++      |        -33 |          0 |         -6 |        -39 |
+| d:\qtproject\FeiQ2\code\task\TaskDispatcher.cpp                    | C++      |          6 |          2 |          0 |          8 |
+| d:\qtproject\FeiQ2\code\task\TaskDispatcher.h                      | C++      |         -1 |          1 |          0 |          0 |
+| d:\qtproject\FeiQ2\setting\functionSetting.json                    | JSON     |        -17 |          0 |          0 |        -17 |
+| d:\qtproject\FeiQ2\setting\personalInfo.json                       | JSON     |        -12 |          0 |          0 |        -12 |
+| d:\qtproject\FeiQ2\setting\systemSetting.json                      | JSON     |         -6 |          0 |          0 |         -6 |
+| d:\qtproject\FeiQ2\test\BoostAsio\CMakeLists.txt                   | CMake    |          0 |          0 |         -1 |         -1 |
+| d:\qtproject\FeiQ2\test\BoostAsio\test.cpp                         | C++      |       -125 |        -13 |        -17 |       -155 |
+| d:\qtproject\FeiQ2\test\BoostUdp\CMakeLists.txt                    | CMake    |         -5 |         -8 |         -3 |        -16 |
+| d:\qtproject\FeiQ2\test\BoostUdp\test.cpp                          | C++      |        -91 |         -9 |        -21 |       -121 |
+| d:\qtproject\FeiQ2\test\CMakeLists.txt                             | CMake    |        -23 |         -9 |         -5 |        -37 |
+| d:\qtproject\FeiQ2\test\GetLocalName\test.cpp                      | C++      |        -23 |         -2 |         -3 |        -28 |
+| d:\qtproject\FeiQ2\test\GetLocalNet\CMakeLists.txt                 | CMake    |         -9 |         -1 |          0 |        -10 |
+| d:\qtproject\FeiQ2\test\GetLocalNet\test.cpp                       | C++      |       -150 |        -54 |        -19 |       -223 |
+| d:\qtproject\FeiQ2\test\OpenSSLtest\CMakeLists.txt                 | CMake    |        -17 |         -3 |         -4 |        -24 |
+| d:\qtproject\FeiQ2\test\OpenSSLtest\test.cpp                       | C++      |       -122 |        -26 |        -33 |       -181 |
+| d:\qtproject\FeiQ2\test\OpenSSLtest\说明.md                          | Markdown |        -52 |          0 |        -44 |        -96 |
+| d:\qtproject\FeiQ2\test\SqlLite\CMakeLists.txt                     | CMake    |         -6 |         -1 |         -2 |         -9 |
+| d:\qtproject\FeiQ2\test\SqlLite\test.cpp                           | C++      |        -52 |         -1 |        -12 |        -65 |
+| d:\qtproject\FeiQ2\test\boostFilesystem\main.cpp                   | C++      |          0 |          0 |         -1 |         -1 |
+| d:\qtproject\FeiQ2\test\jsonCpp\CMakeLists.txt                     | CMake    |        -11 |         -3 |         -3 |        -17 |
+| d:\qtproject\FeiQ2\test\jsonCpp\test.cpp                           | C++      |        -53 |         -4 |        -11 |        -68 |
+| d:\qtproject\FeiQ2\test\jsonCpp\test_json.json                     | JSON     |        -13 |          0 |          0 |        -13 |
+| d:\qtproject\FeiQ2\test\zlib\CMakeLists.txt                        | CMake    |        -19 |         -1 |         -7 |        -27 |
+| d:\qtproject\FeiQ2\test\zlib\test.cpp                              | C++      |        -71 |         -7 |        -16 |        -94 |
+| Total                                                              |          |       -935 |       -156 |       -235 |     -1,326 |
++--------------------------------------------------------------------+----------+------------+------------+------------+------------+

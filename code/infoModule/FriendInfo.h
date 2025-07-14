@@ -9,13 +9,17 @@
 class FriendInfo {
 private:
     std::string ip;// 好友的IP地址
+    std::string mac;// 好友的MAC地址
     UserInfo userInfo;  // 用户本地信息
+    std::string oldestTimestamp;  // 最早的时间戳 用于下次查找最早的消息
 public:
     FriendInfo(){}
     FriendInfo(const std::string& ip, const UserInfo& userInfo) : ip(ip), userInfo(userInfo) {}
     FriendInfo getFriendInfo() const { return *this; }
     void setIp(const std::string& ip) { this->ip = ip; }
     void setUserInfo(const UserInfo& userInfo) { this->userInfo = userInfo; }
+    void setMac(const std::string& mac) { this->mac = mac; }
+    void setOldestTimestamp(const std::string& oldestTimestamp) { this->oldestTimestamp = oldestTimestamp; }
     // 重载==运算符，用于比较两个FriendInfo对象是否相等
     bool operator==(const FriendInfo& other) const {
         return ip == other.ip;  // 比较IP地址是否相等
@@ -24,6 +28,10 @@ public:
     std::string getIp() const { return ip; }
     //获取用户信息
     UserInfo getUserInfo() const { return userInfo; }
+    //获取mac
+    std::string getMac() const { return mac; }
+    //获取最早的时间戳
+    std::string getOldestTimestamp() const { return oldestTimestamp; }
 };
 class Friends{
 private:
