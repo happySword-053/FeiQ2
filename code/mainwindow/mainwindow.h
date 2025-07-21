@@ -40,7 +40,7 @@ private slots:
 
 private:
     // Ui::MainWindow *ui; // 注释掉的UI指针，可能是Qt Designer生成的
-    std::function<void()> friendsInterface; // 好友列表相关接口的回调函数
+    
 
 private slots:
     // 当切换好友时，清除该好友未读气泡
@@ -64,7 +64,22 @@ private:
 
     // 向中控模块发送获取好友历史聊天记录(获取更多历史记录)
     std::function<void()> getFriendHistoryByTime;
-    
+
+    // 向中控模块发送获取好友列表
+    std::function<void()> getFriendsList; 
+public:
+    // 设置好友列表相关接口的回调函数
+    void setFriendsInterface(std::function<void()> friendsInterface){
+        getFriendsList = friendsInterface;
+    }
+    // 设置获取好友历史聊天记录的回调函数
+    void setGetFriendHistory(std::function<void()> getFriendHistory){
+        this->getFriendHistory = getFriendHistory;
+    }
+    // 设置获取更多好友历史聊天记录的回调函数
+    void setGetFriendHistoryByTime(std::function<void()> getFriendHistoryByTime){
+        this->getFriendHistoryByTime = getFriendHistoryByTime;
+    }
 private:
     QListWidget   *m_friendList; // 好友列表控件指针
     QWidget       *m_chatArea;   // 聊天区域控件指针

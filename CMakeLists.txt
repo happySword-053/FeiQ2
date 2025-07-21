@@ -7,7 +7,7 @@ if(NOT WIN32)
 endif()
 
 # 定义项目名称、版本号和语言
-project(FeiQ2 VERSION 0.1 LANGUAGES CXX)
+project(FeiQ2 VERSION 0.1 LANGUAGES CXX C)
 
 # 设置第三方库路径
 set(THIRD_PARTY_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib-common)
@@ -40,6 +40,7 @@ file(GLOB_RECURSE HEADERS "code/*.h")
 set(PROJECT_SOURCES
     ${SOURCES}
     ${HEADERS}
+    
 
     source/image.qrc
 )
@@ -49,7 +50,10 @@ add_definitions(-DCONFIG_PATH="${CMAKE_CURRENT_SOURCE_DIR}/config/")
 
 # 创建可执行文件
 # 使用 WIN32 参数创建无控制台窗口的 GUI 应用
-add_executable(FeiQ2 WIN32 ${PROJECT_SOURCES})
+add_executable(FeiQ2 WIN32 
+                ${PROJECT_SOURCES}
+                ${THIRD_PARTY_PATH}/include/sqllite/sqlite3.c # 添加 SQLite 源文件
+                )
 
 # 设置目标属性
 set_target_properties(FeiQ2 PROPERTIES
@@ -60,6 +64,8 @@ set_target_properties(FeiQ2 PROPERTIES
 target_include_directories(FeiQ2 PRIVATE
     ${THIRD_PARTY_PATH}/include
 )
+
+
 
 # [注意] 为目标添加第三方库的链接目录
 # 您当前的路径指向了为 Visual C++ (VC) 编译的库。

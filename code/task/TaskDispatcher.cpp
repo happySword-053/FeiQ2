@@ -1,9 +1,8 @@
 #include "TaskDispatcher.h"
 
 TaskDispatcher::TaskDispatcher(QObject *parent)
-{
-    
-}
+:QObject(parent)
+{}
 
 std::list<MessageBubble *> TaskDispatcher::getFriendHistory(const QString &friendMac)
 {
@@ -24,4 +23,13 @@ std::list<MessageBubble *> TaskDispatcher::getFriendHistory(const QString &frien
         throw std::runtime_error("查询聊天消息失败"); 
     }
     return messageBubbles;
+}
+
+FriendInfo TaskDispatcher::getFriendInfo(const QString &friendMac)
+{
+    return this->friends.getFriendInfoByMac(friendMac.toUtf8().data());
+}
+
+void TaskDispatcher::broadcastGetFriendInfo()
+{
 }

@@ -7,7 +7,7 @@
 #include "../logs/logs.h"
 #include"../Mapper/Mapper.h"
 extern "C" {
-#include "sqlite3.h"
+#include <sqllite/sqlite3.h>
 }
 
 #ifndef DB_CONFIG_FILE_PATH

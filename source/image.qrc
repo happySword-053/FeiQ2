@@ -2,5 +2,6 @@
     <qresource prefix="/main_icon">
         <file>mainIcon.png</file>
         <file>small.png</file>
+        <file>refrush.png</file>
     </qresource>
 </RCC>

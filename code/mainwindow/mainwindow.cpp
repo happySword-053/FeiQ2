@@ -21,6 +21,10 @@ MainWindow::MainWindow(QWidget *parent)
     // -----------------------
     // 1) 左侧：好友列表
     // -----------------------
+    //添加一个刷新按钮
+    QPushButton *refreshBtn = new QPushButton(this); // 创建刷新按钮
+    refreshBtn->setIcon(QIcon(":/main_icon/refrush.png")); // 设置图标
+    
     m_friendList = new QListWidget(splitter); // 创建好友列表控件
     m_friendList->setMinimumWidth(160); // 设置最小宽度
     m_friendList->setFrameShape(QFrame::NoFrame); // 设置无边框
@@ -63,7 +67,7 @@ MainWindow::MainWindow(QWidget *parent)
     chatPanelLayout->setContentsMargins(0, 0, 0, 0); // 设置内边距
     chatPanelLayout->setSpacing(0); // 设置间距
 
-    // —— 聊天消息滚动区 —— 
+    // —— 聊天消息滚动区 修改只需用m_scrollArea->setWidget就行---------------------------------—— 
     m_chatArea = new QWidget; // 创建聊天区域部件
     m_chatLayout = new QVBoxLayout(m_chatArea); // 创建垂直布局
     m_chatLayout->setContentsMargins(8, 8, 8, 8); // 设置内边距
@@ -298,16 +302,7 @@ void MainWindow::insertOutgoingMessage(const QString &friendName, const QString 
         m_chatLayout->addWidget(bubbleContainer);
     }
 
-std::list<MessageBubble *> MainWindow::getFriendHistory(const QString &mac)
-{
-    return std::list<MessageBubble *>();
 
-
-}
-std::list<MessageBubble *> MainWindow::getFriendHistoryByTime(const QString &mac, const QString &time)
-{
-    return std::list<MessageBubble *>();
-}
 void MainWindow::insertIncomingMessage(const QString &sender, const QString &content) {
         // 1) 创建头部标签 [时间] 发送者
         QString timeStr = QDateTime::currentDateTime().toString("HH:mm:ss"); // 获取当前时间并格式化

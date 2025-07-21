@@ -1,6 +1,6 @@
 #pragma once
 #include<string>
-#include<unordered_set>
+#include<set>
 #include"../systemInfoHelper/userLocalInfo.h"
 #include"../systemInfoHelper/AdapterInfo.h"
 #include"../logs/logs.h"
@@ -21,9 +21,7 @@ public:
     void setMac(const std::string& mac) { this->mac = mac; }
     void setOldestTimestamp(const std::string& oldestTimestamp) { this->oldestTimestamp = oldestTimestamp; }
     // 重载==运算符，用于比较两个FriendInfo对象是否相等
-    bool operator==(const FriendInfo& other) const {
-        return ip == other.ip;  // 比较IP地址是否相等
-    }
+    
     //获取ip
     std::string getIp() const { return ip; }
     //获取用户信息
@@ -32,12 +30,22 @@ public:
     std::string getMac() const { return mac; }
     //获取最早的时间戳
     std::string getOldestTimestamp() const { return oldestTimestamp; }
+    bool operator==(const FriendInfo& other) const {
+        return mac == other.mac;  // 比较IP地址是否相等
+    }
+    
+    // 添加小于运算符重载（set必需）
+    bool operator<(const FriendInfo& other) const {
+        return ip < other.ip;  // 按IP地址升序排序
+    }
 };
 class Friends{
 private:
-    std::unordered_set<FriendInfo> friendsMap;  // 存储好友信息的映射表，键为IP地址，值为FriendInfo对象
+    std::set<FriendInfo> friendsMap;  // 存储好友信息的映射表，键为IP地址，值为FriendInfo对象
     
 public:
+    
+
     // 添加好友信息
     void addFriendWithoutNameInfo(const std::string& ip){
         FriendInfo friendInfo;
@@ -64,5 +72,14 @@ public:
             LOG(std::string("删除好友失败,ip为") + it.getFriendInfo().getIp() + std::string(",用户名") + it.getFriendInfo().getUserInfo().userName,ERROR);
             throw std::runtime_error(std::string("删除好友失败,ip为") + it.getFriendInfo().getIp() + std::string(",用户名") + it.getFriendInfo().getUserInfo().userName); 
         }
+    }
+    FriendInfo getFriendInfoByMac(const std::string& mac){
+        for(auto it = friendsMap.begin(); it != friendsMap.end(); it++){
+            if(it->getMac() == mac){
+                return *it;
+            }
+        }
+        LOG(std::string("没有找到该好友,mac为") + mac,ERROR);
+        throw std::runtime_error(std::string("没有找到该好友,mac为") + mac);
     }
 };
