@@ -37,7 +37,8 @@ public:
 
     // 纯虚函数：初始化线程池（由派生类实现）
     virtual int init() = 0;
-
+    // 线程任务函数
+    virtual void threadTask() = 0;
     // 任务入队（通用实现）
     template<typename F, typename... Args>
     auto enqueue(F&& f, Args&&... args) -> std::future<typename std::result_of<F(Args...)>::type> {
@@ -132,28 +133,32 @@ public:
         return instance;
     }
 
+    // 禁止拷贝构造和赋值
+    NetThreadPool(const NetThreadPool&) = delete;
+    NetThreadPool& operator=(const NetThreadPool&) = delete;
+    void threadTask() override { 
+        while (true) {
+            std::function<void()> task;
+            {
+                std::unique_lock<std::mutex> lock(queue_mutex);
+                idleThreadCount++;
+                condition.wait(lock, [this] { return stop || !tasks.empty(); });
+                idleThreadCount--;
+
+                if (stop && tasks.empty()) return;
+                task = std::move(tasks.front());
+                tasks.pop();
+                busyThreadCount++;
+                taskCount++;
+            }
+            task();
+            busyThreadCount--;
+        }
+    }
     // 初始化线程池
     int init() override {
         for (int i = 0; i < minThreadCount; ++i) {
-            workers.emplace_back([this]() {
-                while (true) {
-                    std::function<void()> task;
-                    {
-                        std::unique_lock<std::mutex> lock(queue_mutex);
-                        idleThreadCount++;
-                        condition.wait(lock, [this] { return stop || !tasks.empty(); });
-                        idleThreadCount--;
-
-                        if (stop && tasks.empty()) return;
-                        task = std::move(tasks.front());
-                        tasks.pop();
-                        busyThreadCount++;
-                        taskCount++;
-                    }
-                    task();
-                    busyThreadCount--;
-                }
-            });
+            workers.emplace_back(&NetThreadPool::threadTask, this);
         }
         threadCount.store(minThreadCount);
         return 0;
@@ -164,29 +169,3 @@ public:
 };
 
 // 通用任务线程池
-class CrrentThreadPool : public BaseThreadPool {
-public:
-    // 构造函数
-    CrrentThreadPool(int minThread = 10, int maxThread = 100) : BaseThreadPool(minThread, maxThread) {}
-
-    // 初始化线程池
-    int init() override {
-        for (int i = 0; i < minThreadCount; ++i) {
-            workers.emplace_back([this]() {
-                while (true) {
-                    std::function<void()> task;
-                    {
-                        std::unique_lock<std::mutex> lock(queue_mutex);
-                        condition.wait(lock, [this] { return stop || !tasks.empty(); });
-                        if (stop && tasks.empty()) return;
-                        task = std::move(tasks.front());
-                        tasks.pop();
-                    }
-                    task();
-                }
-            });
-        }
-        threadCount.store(minThreadCount);
-        return 0;
-    }
-};

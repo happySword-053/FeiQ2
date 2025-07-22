@@ -174,8 +174,31 @@ MainWindow::MainWindow(QWidget *parent)
         // 打开文件共享管理界面
         this->shareFileManagerWidget->show();
     });
-    connect(btnDetail, &QPushButton::clicked, this, [](){
+    connect(btnDetail, &QPushButton::clicked, this, [=](){
+        if(currentFriendItemWidget == nullptr){
+            qDebug("当前没有选中好友");
+            return;
+        }
         qDebug("点击了“好友详情”");
+        LOG("点击了“好友详情",INFO);
+        // 创建普通变量对话框（替换指针版本）
+        QDialog dialog(this);  // 指定父窗口为 this，确保模态行为正确
+        dialog.setWindowTitle("好友详情");
+        dialog.setFixedSize(300, 200);
+        
+        auto layout = new QVBoxLayout(&dialog);  // 直接关联到 dialog
+        auto lblIP   = new QLabel(QString("IP: %1").arg(QString::fromStdString(currentFriendItemWidget->getFriendInfo().getIp())), &dialog);
+        auto lblMAC  = new QLabel(QString("MAC: %1").arg(QString::fromStdString(currentFriendItemWidget->getFriendInfo().getMac())), &dialog);
+        auto lblUser = new QLabel(QString("用户名: %1").arg(QString::fromStdString(currentFriendItemWidget->getFriendInfo().getUserInfo().userName)), &dialog);
+        auto lblPC   = new QLabel(QString("计算机名: %1").arg(QString::fromStdString(currentFriendItemWidget->getFriendInfo().getUserInfo().PCName)), &dialog);
+    
+        layout->addWidget(lblIP);
+        layout->addWidget(lblMAC);
+        layout->addWidget(lblUser);
+        layout->addWidget(lblPC);
+        
+        
+        dialog.exec();  // 替换原代码中的 setLayout 等错误调用
     });
     connect(btnDelete, &QPushButton::clicked, this, [=](){
         qDebug("点击了“设置”");
@@ -216,11 +239,14 @@ void MainWindow::onFriendSelectionChanged(QListWidgetItem *current, QListWidgetI
         if (fw) {
             fw->clearUnread(); // 清除未读消息提示
         }
+        this->currentFriendItemWidget = fw;
         // 创建一个 FriendChatWidget，为当前FriendItemWidget的value
         FriendChatWidget *chatWidget = new FriendChatWidget();
         m_friendWidgets[current] = chatWidget; // 将新的FriendChatWidget添加到m_friendWidgets中
         m_scrollArea->setWidget(chatWidget); // 将新的FriendChatWidget设置为m_scrollArea的widget
-       
+
+        //从sqlite中获取聊天记录
+        
         
         
     }

@@ -58,7 +58,7 @@ public slots:
     void onNetworkMessageReceived(std::vector<char>&& data);
 
     /*---------前端给的信号连接的槽函数-----------*/
-    // 文件管理槽 ////////////
+    // 本地文件管理槽 ////////////
 
     // 添加文件
     void addFile(const QString& fileName);
@@ -66,7 +66,14 @@ public slots:
     void deleteFile(const QString& fileName);
 
     // 聊天消息槽 ////////////
-    
+    // 发送消息
+    void sendMessage(const QString& message, const QString& friendIP);
 
-    
+    // 文件传输槽////////////
+    // 请求接收某个文件
+    void requestFile(const QString& fileName, const QString& friendIP);
+
+    // 网络槽 /////////////
+    // 发送广播
+    void udp_broadcast_slot();  
 };

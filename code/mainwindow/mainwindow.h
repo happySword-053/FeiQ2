@@ -20,6 +20,8 @@
 #include"../MyControl/MyWidget/MessageBubble.h"
 #include"sharefilemanagerwidget.h"
 #include"settingswidget.h"
+#include"../logs/logs.h"
+#include<QDialog>
 // QT_BEGIN_NAMESPACE
 // namespace Ui {
 // class MainWindow;
@@ -91,6 +93,7 @@ private:
     ShareFileManagerWidget *shareFileManagerWidget; // 文件共享管理窗口指针
     SettingsWidget *settingsWidget; // 设置窗口指针
     QMap<QListWidgetItem *, QWidget *> m_friendWidgets; // 好友控件映射表
+    FriendItemWidget *currentFriendItemWidget = nullptr; // 当前选中的好友项控件指针
 };
 
 #endif // MAINWINDOW_H  // 头文件结束宏
