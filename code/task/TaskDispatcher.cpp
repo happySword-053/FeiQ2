@@ -30,6 +30,3 @@ FriendInfo TaskDispatcher::getFriendInfo(const QString &friendMac)
     return this->friends.getFriendInfoByMac(friendMac.toUtf8().data());
 }
 
-void TaskDispatcher::broadcastGetFriendInfo()
-{
-}

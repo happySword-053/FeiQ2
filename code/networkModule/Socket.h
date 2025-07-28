@@ -21,6 +21,15 @@ class TcpModule;
 //表示已连接的会话
 class Session: public std::enable_shared_from_this<Session>{
 private:
+    
+    int reading_state_ = 0;// 数据包读取状态相关std::vector<char> header_buffer_;  // 存储头部信息(taskType + dataLength)
+    std::vector<char> data_buffer_;    // 存储数据部分
+    std::vector<char> header_buffer_;  // 存储头部信息(taskType + dataLength)
+    std::size_t bytes_received_ = 0;   // 已接收字节数
+    static const int READING_HEADER = 0;
+    static const int READING_DATA = 1;
+
+
     boost::asio::ip::tcp::socket socket_;  // 套接字
     // UserInfoAndNetworkInfo& userInfoAndNetworkInfo;//用户信息和网络信息
     std::vector<char> recv_buffer_;  // 接收缓冲区
@@ -77,6 +86,7 @@ public:
     std::string get_ip() {
         return socket_.remote_endpoint().address().to_string();  // 返回远程端点的 IP 地址 
     }
+    void handle_read_error(const boost::system::error_code &error);
 };
 
 

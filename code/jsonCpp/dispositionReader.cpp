@@ -6,7 +6,11 @@ bool DispositionReader::writeConfig(const std::string & configName, std::vector<
     Json::StreamWriterBuilder writer;
     writer["emitUTF8"] = true;
     writer["indentation"] = "\t";
-
+    std::unique_lock<std::mutex> lock(config_mutex_);
+    if(configMap.find(configName) == configMap.end()){
+        return false;
+    }
+    
     // 修改写入方式（添加错误处理）
     std::ofstream ofs(configMap[configName].second, std::ios::trunc); // 明确使用截断模式
     if (!ofs.is_open()) {
@@ -36,6 +40,7 @@ bool DispositionReader::writeConfig(const std::string & configName, std::vector<
 
 Json::Value DispositionReader::readConfig(const std::string& filename)
 {
+
     std::ifstream ifile(filename);
     if (!ifile.is_open()) {
         throw std::runtime_error("文件打开失败");
@@ -57,13 +62,11 @@ Json::Value DispositionReader::readConfig(const std::string& filename)
     return root;
 }
 
-DispositionReader::~DispositionReader()
-{
-    destroy();
-}
+
 
 bool DispositionReader::init()
 {
+    std::unique_lock<std::mutex> mtx(this->config_mutex_);
     try{
         auto json_files = getFileList();
         for (auto& file : json_files) {
@@ -86,10 +89,7 @@ bool DispositionReader::init()
     return true;
 }
 
-bool DispositionReader::destroy()
-{
-    return false;
-}
+
 
 /**
  * @brief 获取指定路径下的所有 JSON 文件列表

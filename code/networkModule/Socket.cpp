@@ -220,72 +220,94 @@ void TcpModule::sendDataToAll(std::vector<char> &&data)
 /*-------Session类-----------*/
 void Session::doread()
 {
-    // 确保 recv_buffer_ 准备好接收数据
-    // 如果 recv_buffer_ 是 std::vector<char> 并且您想覆盖旧数据，
-    // 并且确保它有足够的大小。通常在创建时或每次读取前调整。
-    // 例如，如果 recv_buffer_ 还没有分配足够的空间：
-    if (recv_buffer_.size() < 1024 * 9)
-    {
-        recv_buffer_.resize(1024 * 9);
+    auto self = shared_from_this();
+    
+    // 初始化状态和缓冲区
+    if (header_buffer_.empty()) {
+        header_buffer_.resize(8);
     }
-
-    auto self = shared_from_this(); // 获取当前对象的 shared_ptr
-    socket_.async_read_some(
-        boost::asio::buffer(recv_buffer_.data(), recv_buffer_.size()), // 使用 .data() 和 .size() 更安全
-        [this, self](const boost::system::error_code &error, std::size_t bytes_transferred)
-        {
-            if (!error)
-            {
-                // 成功读取 bytes_transferred 字节的数据
-                LOG(std::string("读取到 ") + std::to_string(bytes_transferred) + " 字节数据", INFO);
-                std::vector<char> data;
-                {
-                    // 加锁，确保在读取数据时不会被其他线程修改
-                    std::unique_lock<std::mutex> lock(recv_mtx);
-                    // 处理数据
-                    data = std::vector<char>(recv_buffer_.begin(), recv_buffer_.begin() + bytes_transferred);
+    
+    if (reading_state_ == READING_HEADER) {
+        // 读取头部信息 (taskType + dataLength)
+        boost::asio::async_read(
+            socket_,
+            boost::asio::buffer(header_buffer_.data() + bytes_received_, 8 - bytes_received_),
+            [this, self](const boost::system::error_code &error, std::size_t bytes_transferred) {
+                if (!error) {
+                    bytes_received_ += bytes_transferred;
+                    
+                    if (bytes_received_ == 8) {
+                        // 完整头部已接收
+                        int taskType = *reinterpret_cast<int*>(header_buffer_.data());
+                        int dataLength = *reinterpret_cast<int*>(header_buffer_.data() + 4);
+                        
+                        // 重置状态以读取数据部分
+                        reading_state_ = READING_DATA;
+                        data_buffer_.resize(dataLength);
+                        bytes_received_ = 0;
+                        
+                        // 继续读取数据部分
+                        doread();
+                    } else {
+                        // 继续读取剩余头部数据
+                        doread();
+                    }
+                } else {
+                    handle_read_error(error);
                 }
-                // TODO: 在这里处理接收到的数据
-                // 例如: handel_data(recv_buffer_.data(), bytes_transferred);
-                // 注意：handel_data 需要接收实际读取的数据量
-                // int result = handel_data(); // 您当前的 handel_data 不接收参数
-
-                // 调用 on_data_control_ 处理数据
-                if (on_data_control_)
-                {
-                    on_data_control_(std::move(data)); // 调用 on_data_control_ 处理数据
-                }
-                else
-                {
-                    LOG("未设置 on_data_control_ 回调", WARNING);
-                }
-
-                // 处理完数据后，继续下一次读取
-                doread();
             }
-            else
-            {
-                // 发生错误
-                if (error == boost::asio::error::eof)
-                {
-                    LOG("连接被对方关闭 (EOF)", INFO);
+        );
+    } else if (reading_state_ == READING_DATA) {
+        // 读取数据部分
+        boost::asio::async_read(
+            socket_,
+            boost::asio::buffer(data_buffer_.data() + bytes_received_, data_buffer_.size() - bytes_received_),
+            [this, self](const boost::system::error_code &error, std::size_t bytes_transferred) {
+                if (!error) {
+                    bytes_received_ += bytes_transferred;
+                    
+                    if (bytes_received_ == data_buffer_.size()) {
+                        // 完整数据包已接收
+                        // 构造完整数据包
+                        std::vector<char> packet;
+                        packet.insert(packet.end(), header_buffer_.begin(), header_buffer_.end());
+                        packet.insert(packet.end(), data_buffer_.begin(), data_buffer_.end());
+                        
+                        // 调用回调处理数据
+                        if (on_data_control_) {
+                            on_data_control_(std::move(packet));
+                        } else {
+                            LOG("未设置 on_data_control_ 回调", WARNING);
+                        }
+                        
+                        // 重置状态以读取下一个数据包
+                        reading_state_ = READING_HEADER;
+                        bytes_received_ = 0;
+                        
+                        // 继续下一次读取
+                        doread();
+                    } else {
+                        // 继续读取剩余数据
+                        doread();
+                    }
+                } else {
+                    handle_read_error(error);
                 }
-                else if (error == boost::asio::error::operation_aborted)
-                {
-                    LOG("读取操作被取消 (aborted)", INFO);
-                }
-                else
-                {
-                    LOG(std::string("read失败: ") + error.message(), ERROR);
-                }
-                // 发生错误或EOF，关闭会话
-                // 通常在这里调用 stop() 或者通知 TcpModule 移除此会话
-                // 例如: stop();
-                // 或者: if (auto owner = owner_module_.lock()) { owner->remove_session(self); }
-                // 这里简单地停止，具体实现取决于您的会话管理策略
-                stop(); // 确保 stop() 能被安全调用
             }
-        });
+        );
+    }
+}
+
+void Session::handle_read_error(const boost::system::error_code &error)
+{
+    if (error == boost::asio::error::eof) {
+        LOG("连接被对方关闭 (EOF)", INFO);
+    } else if (error == boost::asio::error::operation_aborted) {
+        LOG("读取操作被取消 (aborted)", INFO);
+    } else {
+        LOG(std::string("read失败: ") + error.message(), ERROR);
+    }
+    stop();
 }
 
 void Session::dowrite(std::vector<char> &&data)

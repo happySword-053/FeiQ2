@@ -19,7 +19,7 @@
 
 //数据加密解密模块,解压缩以及压缩模块
 class DataProcess {
-private:
+private:  
     const char* password = "MTM1NTI4NTAyN0BxcS5jb20=";
 
     void derive_key(unsigned char key[EVP_MAX_KEY_LENGTH]);//从密码派生出 Key（不覆盖 IV），这里只用 EVP_BytesToKey 生成密钥，EVP_BytesToKey 的 IV 输出部分我们不要用它来实际“解/加密”，而是由随机 IV 或串前缀来决定

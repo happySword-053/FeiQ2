@@ -29,28 +29,12 @@ void NetworkManager::on_data_control_udp(std::vector<char> &&data)
 {
     auto tem_data = std::move(data);  // 移动数据到局部变量中
     
-    //处理数据
-    try{
-        tem_data = this->dataProcess.decrypt(tem_data);  // 解密数据
-        //解压缩数据
-        tem_data = this->dataProcess.decompress_vector(tem_data);  // 解压缩数据
-    }catch(const std::exception& e){
-        LOG(std::string("on_data_control_tcp槽函数收到错误") + e.what(), ERROR);  // 记录错误信息
-        throw std::runtime_error("on_data_control_tcp槽函数收到错误");  // 抛出异常，用于上层处理
-    }
     emit this->recvMessageSignal(std::move(tem_data));  // 发射信号并移动数据
 }
 
 void NetworkManager::tcp_sendMessageSlot(const std::string& ip, std::vector<char>& data){
-    try{
-
-        data = this->dataProcess.compress_vector(data);  // 压缩数据
-        data = this->dataProcess.encrypt(data);  // 加密数据
-        this->tcpModule->sendData(ip,move(data));  // 调用 TcpModule 的 sendData 方法发送数据
-    }catch(const std::exception& e){
-        LOG(std::string("tcp_sendMessageSlot槽函数收到错误") + e.what(), ERROR);  // 记录错误信息
-        throw std::runtime_error("tcp_sendMessageSlot槽函数收到错误");  // 抛出异常，用于上层处理
-    }
+    
+    ///////////////
 }
 
 void NetworkManager::rebind(const std::string &ip)

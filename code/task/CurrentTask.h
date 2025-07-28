@@ -7,13 +7,15 @@
 #include<cstdint>
 #include"../systemInfoHelper/AdapterInfo.h"
 #include"../systemInfoHelper/userLocalInfo.h"
+#include"../dataProcess/DataProcess.h"
 
 #define BLOCK_SIZE 16 * 1024 // 16KB块大小
 /* 任务类型*/
 #define ERROR_TASK -1
 #define NON_TASK 0
+/*--------文件任务--------*/
 #define FILE_LIST_REQUEST 1 // 请求当前可以下载的文件列表
-#define FILE_LIST_RETURN 2 // 返回房当前自身可下载的文件列表
+#define FILE_LIST_RETURN 2 // 返回当前自身可下载的文件列表
 #define  FILE_DOWNLOAD 3 // 文件下载
 #define FILE_BLOCK 4// 当前的文件块
 #define FILE_BLOCK_CONFIRM 5 //确认收到文件块
@@ -33,11 +35,15 @@ public:
     std::vector<char> data;  // 数据字节流
     /*|taskType | dataLength | data*/
     // 序列化为 vector<char>
-    std::vector<char> serialize() const {
+    std::vector<char> serialize()  {
         std::vector<char> buffer;
         // 写入 taskType
         auto* typePtr = reinterpret_cast<const char*>(&taskType);
         buffer.insert(buffer.end(), typePtr, typePtr + sizeof(taskType));
+        // 压缩和加密
+        DataProcess dataProcess;
+        data = dataProcess.compress_vector(data);  // 压缩数据
+        data = dataProcess.encrypt(data);  // 加密数据
         // 写入 dataLength
         int dataLength = static_cast<int>(data.size());
         auto* lenPtr = reinterpret_cast<const char*>(&dataLength);
@@ -59,6 +65,10 @@ public:
         offset += sizeof(dataLength);
         // 读 data
         info.data.assign(buffer.begin() + offset, buffer.begin() + offset + dataLength);
+        // 解密和解压缩
+        DataProcess dataProcess;
+        info.data = dataProcess.decrypt(info.data);  // 解密数据
+        info.data = dataProcess.decompress_vector(info.data);  // 解压数据
         return info;
     }
 };
