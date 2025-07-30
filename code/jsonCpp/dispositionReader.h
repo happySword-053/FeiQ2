@@ -6,11 +6,17 @@
 #include <vector>
 #include <filesystem> // 包含 C++17 的文件系统库头文件
 #include <mutex>
-
+#include <iostream>
+#include <sstream>
+#include <variant>  // 添加variant头文件
+#include"../logs/logs.h"
 
 #ifndef CONFIG_PATH
 #define CONFIG_PATH "../config/" // 配置文件的根路径，可根据需要修改，注意最后有一个"/"
 #endif
+
+// 定义支持多类型的配置值
+using ConfigValue = std::variant<std::string, int, bool>;
 
 //主要任务是获取json对象方便获取配置
 class DispositionReader {
@@ -34,12 +40,13 @@ public:
     DispositionReader(const DispositionReader&&) = delete;
     void operator=(const DispositionReader&&) = delete;
     // 修改配置
-    bool writeConfig(const std::string & configName, std::vector<std::pair<std::string, std::string>>& configs);
-    
+    bool writeConfig(const std::string & configName, std::vector<std::pair<std::string, ConfigValue>>& configs);
+    // 读取键值对
+    std::string readValue(const std::string& configName, const std::string& key);
 
 private:
     // 将构造函数和析构函数私有化
-    DispositionReader(){}
+    DispositionReader() { init(); }
     
     // 初始化函数
     bool init();
@@ -53,4 +60,6 @@ private:
 private:
     std::vector<std::string> getFileList(); // 获取指定路径下的所有文件列表的函数声明
 };
+
+
 

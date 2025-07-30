@@ -18,6 +18,8 @@
 #include <QButtonGroup>
 #include<QDesktopServices>
 
+#include"../jsonCpp/dispositionMiddle.h"
+#include"../networkModule/NetworkHelper.h"
 // ----------- PersonalInfoSettingsPage 类声明 -----------
 // 因为 SettingsWidget 需要用到这个类，所以它的声明必须在 SettingsWidget 之前
 class PersonalInfoSettingsPage : public QWidget
@@ -28,6 +30,8 @@ public:
     explicit PersonalInfoSettingsPage(QWidget *parent = nullptr);
     ~PersonalInfoSettingsPage();
 
+    QString getUserName() const{return usernameLineEdit->text();}
+    DispositionMiddle *dispositionMiddle;
 private slots:
     void on_commonAvatarSet_clicked();
     void on_customAvatarSet_clicked();
@@ -38,9 +42,14 @@ private slots:
     void on_confirm_clicked();
     void on_cancel_clicked();
 
+signals:
+    void confirm();
+    void cancle();
 private:
     void setupUi();
     void setupConnections();
+
+    //DispositionMiddle *dispositionMiddle;
 
     QLabel* pageTitleLabel;
     QLineEdit* usernameLineEdit;
@@ -91,7 +100,10 @@ class SystemSettingsPage : public QWidget
 public:
     explicit SystemSettingsPage(QWidget *parent = nullptr);
     ~SystemSettingsPage();
-
+    bool getTrayClickOpenMainCheckBox() const{return trayClickOpenMainCheckBox->isChecked();}
+    bool getDoubleClickMinimizedCheckBox() const{return doubleClickMinimizedCheckBox->isChecked();}
+    bool getCloseToTrayCheckBox() const{return closeToTrayCheckBox->isChecked();}
+    DispositionMiddle *dispositionMiddle;
 private slots:
     // 启动设置
     void on_launchOnBootCheckBox_toggled(bool checked);
@@ -104,13 +116,16 @@ private slots:
     // 底部按钮
     void on_confirmButton_clicked();
     void on_cancelButton_clicked();
-
+signals:
+    void confirm();
+    void cancle();
 private:
     void setupUi();
     void setupConnections();
 
     QLabel* pageTitleLabel;
 
+    // DispositionMiddle *dispositionMiddle;
     // 启动设置
     QGroupBox* launchSettingsGroupBox;
     QCheckBox* launchOnBootCheckBox;
@@ -138,23 +153,27 @@ class NetworkSettingsPage : public QWidget
 public:
     explicit NetworkSettingsPage(QWidget *parent = nullptr);
     ~NetworkSettingsPage();
-
+    DispositionMiddle *dispositionMiddle;
 private slots:
     void on_macIpComboBox_currentIndexChanged(const QString &text); // 处理选择或输入变化
     void on_enableBreakpointResumeCheckBox_toggled(bool checked);
 
     void on_confirmButton_clicked();
     void on_cancelButton_clicked();
-
+signals:
+    void confirm();
+    void cancle();
 private:
     void setupUi();
     void setupConnections();
 
     QLabel* pageTitleLabel;
 
+    // DispositionMiddle *dispositionMiddle;
     // MAC/IP 地址设置
     QGroupBox* macIpGroupBox;
     QComboBox* macIpComboBox; // 更改为 QComboBox
+    QString currentMacIp;
 
     // 文件断点续传
     QGroupBox* fileTransferGroupBox;
@@ -174,7 +193,7 @@ class FunctionSettingsPage : public QWidget
 public:
     explicit FunctionSettingsPage(QWidget *parent = nullptr);
     ~FunctionSettingsPage();
-
+    DispositionMiddle *dispositionMiddle;
 private slots:
     void on_browseReceivePathButton_clicked();
     void on_openReceivePathButton_clicked();
@@ -182,11 +201,14 @@ private slots:
     void on_doNotDisturbCheckBox_toggled(bool checked);
     void on_confirmButton_clicked();
     void on_cancelButton_clicked();
-
+signals:
+    void confirm();
+    void cancle();
 private:
     void setupUi();
     void setupConnections();
 
+    //DispositionMiddle *dispositionMiddle;
     // UI 元素
     QLabel* pageTitleLabel;
 
@@ -225,7 +247,10 @@ class SettingsWidget : public QWidget
 public:
     explicit SettingsWidget(QWidget *parent = nullptr);
     ~SettingsWidget();
-
+    PersonalInfoSettingsPage* getPersonalInfoSettingsPage() { return personalInfoPage; }
+    SystemSettingsPage* getSystemSettingsPage() { return systemSettingsPage; }
+    NetworkSettingsPage* getNetworkSettingsPage() { return networkSettingsPage; }
+    FunctionSettingsPage* getFunctionSettingsPage() { return functionSettingsPage; }
 private slots:
     void on_listWidget_currentRowChanged(int currentRow);
 
@@ -233,8 +258,12 @@ private:
     void setupUi();
     void setupConnections();
 
+    // 配置中间模型
+    DispositionMiddle dispositionMiddle;
+
     QListWidget* navigationListWidget;
     QStackedWidget* stackedWidget;
+    // 配置文件中间模型
 
     // 各个设置页面实例
     PersonalInfoSettingsPage* personalInfoPage;

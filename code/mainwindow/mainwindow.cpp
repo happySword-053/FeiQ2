@@ -6,6 +6,31 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent) // 初始化父类QMainWindow
     //, ui(new Ui::MainWindow) // 注释掉的UI初始化
 {
+    // 设置icon
+    this->setWindowIcon(QIcon(":/main_icon/mainIcon.png")); // 设置窗口图标
+    // 初始化系统托盘
+    trayIcon = new QSystemTrayIcon(this);
+    trayIcon->setIcon(QIcon(":/main_icon/mainIcon.png"));
+    trayIcon->setToolTip("FeiQ2");
+    // === 新增托盘菜单初始化 ===
+    trayMenu = new QMenu(this);
+    
+    // 添加"显示主窗口"菜单项
+    QAction* showAction = new QAction("显示主窗口", this);
+    connect(showAction, &QAction::triggered, this, &MainWindow::show);
+    
+    // 添加"退出程序"菜单项
+    QAction* exitAction = new QAction("退出", this);
+    connect(exitAction, &QAction::triggered, qApp, &QApplication::quit);
+    
+    // 将菜单项添加到菜单
+    trayMenu->addAction(showAction);
+    trayMenu->addSeparator(); // 添加分隔线
+    trayMenu->addAction(exitAction);
+    
+    // 设置托盘图标上下文菜单
+    trayIcon->setContextMenu(trayMenu);
+    trayIcon->show();
     //ui->setupUi(this); // 注释掉的UI设置
     QWidget *central = new QWidget(this); // 创建中央部件
     setCentralWidget(central); // 设置中央部件
@@ -170,13 +195,14 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 点击侧栏按钮只是示例：这里仅打印到控制台，实际可根据需要扩展
     connect(btnFile, &QPushButton::clicked, this, [=](){
-        qDebug("点击了“文件共享列表”");
+        
+        //qDebug("点击了“文件共享列表”");
         // 打开文件共享管理界面
         this->shareFileManagerWidget->show();
     });
     connect(btnDetail, &QPushButton::clicked, this, [=](){
         if(currentFriendItemWidget == nullptr){
-            qDebug("当前没有选中好友");
+            // qDebug("当前没有选中好友");
             return;
         }
         qDebug("点击了“好友详情”");
@@ -196,8 +222,6 @@ MainWindow::MainWindow(QWidget *parent)
         layout->addWidget(lblMAC);
         layout->addWidget(lblUser);
         layout->addWidget(lblPC);
-        
-        
         dialog.exec();  // 替换原代码中的 setLayout 等错误调用
     });
     connect(btnDelete, &QPushButton::clicked, this, [=](){
@@ -205,6 +229,8 @@ MainWindow::MainWindow(QWidget *parent)
         // 打开设置窗口
         this->settingsWidget->show();
     });
+    // 链接托盘点击信号
+     connect(trayIcon, &QSystemTrayIcon::activated, this, &MainWindow::onTrayIconActivated);
 }
 
 // MainWindow 析构函数
@@ -294,7 +320,36 @@ void MainWindow::onSimulateReceive() {
             }
         }
     }
-void MainWindow::insertOutgoingMessage(const QString &friendName, const QString &content) {
+void MainWindow::onTrayIconActivated(QSystemTrayIcon::ActivationReason reason)
+{
+    // 没有启用左键单击托盘打开主界面
+    if(!this->getSettingsWidget()->getSystemSettingsPage()->getTrayClickOpenMainCheckBox()){
+        return;
+    }
+    if (reason == QSystemTrayIcon::Trigger) {
+        
+        // 显示所有窗口
+        foreach (QWidget* widget, widgetList) {
+            if (widget && !widget->isVisible()) {
+                widget->show();
+                widget->setWindowState(widget->windowState() & ~Qt::WindowMinimized);
+            }
+        }
+        
+        // 将最后一个窗口设为顶级窗口
+        if (!widgetList.isEmpty()) {
+            QWidget* lastWidget = widgetList.last();
+            lastWidget->raise();
+            lastWidget->activateWindow();
+            // 如果需要确保窗口置顶，可以添加
+            // lastWidget->setWindowFlags(lastWidget->windowFlags() | Qt::WindowStaysOnTopHint);
+            // lastWidget->show();
+        }
+        
+    }
+}
+    void MainWindow::insertOutgoingMessage(const QString &friendName, const QString &content)
+    {
         // 1) 创建头部标签 [时间] Me → 好友名
         QString timeStr = QDateTime::currentDateTime().toString("HH:mm:ss"); // 获取当前时间
         QLabel *header = new QLabel(QString("[%1] %2").arg(timeStr).arg("Me → " + friendName));
@@ -328,6 +383,12 @@ void MainWindow::insertOutgoingMessage(const QString &friendName, const QString 
         m_chatLayout->addWidget(bubbleContainer);
     }
 
+void MainWindow::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton) { // 检查是否是双击
+        this->hide(); // 隐藏窗口
+    }
+}
 
 void MainWindow::insertIncomingMessage(const QString &sender, const QString &content) {
         // 1) 创建头部标签 [时间] 发送者

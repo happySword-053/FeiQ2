@@ -1,6 +1,6 @@
 {
-  "systemSetting": {
-    "leftClickIconAction": true,
-    "closeToTray": true
-  }
+  "trayClickOpenMain": false,
+  "doubleClickMinimized": false,
+  "closeToTray": false,
+  "chatLogPath":"D:\\Program Files\\FeiQ\\feiql.fql"
 }

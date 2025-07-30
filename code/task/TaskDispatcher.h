@@ -3,12 +3,13 @@
 #include<QObject>
 #include<QString>
 #include<QMainWindow>
+#include<QPoint>
 
 #include<list>
 
 #include"../networkModule/NetworkManager.h"
 #include"../fileSystem/FileSystem.h"
-
+#include"../mainwindow/mainwindow.h"
 #include"../dataProcess/DataProcess.h"
 #include"../infoModule/chatMessage/chatMessageDAO.h"
 
@@ -28,7 +29,8 @@ class TaskDispatcher :public QObject{
 public:
     TaskDispatcher(QObject* parent = nullptr);
     //~TaskDispatcher();
-
+    void setMainWindow(std::shared_ptr<MainWindow>){this->mainWindow = mainWindow;}
+    std::shared_ptr<MainWindow> getMainWindow(){return mainWindow;}
     // 解析数据头将其分发给各个模块
     void parseDataHeader(std::vector<char>& data);
     /*----好友相关------*/
@@ -47,13 +49,14 @@ private:
     std::list<MessageBubble*> getFriendHistory(const QString& friendMac);
     //获取好友历史聊天记录(获取更多历史记录)
     std::list<MessageBubble*> getFriendHistoryByTime(const QString& friendMac, const QString& time);
-    // 前端指针
-    QMainWindow* mainWindow;
+    
 private:
     NetworkManager networkManager;  // 网络功能模块
     FileSystem fileSystem;  // 文件系统模块
     
     Friends friends;  // 好友管理模块
+    
+    std::shared_ptr<MainWindow> mainWindow;  // 主窗口指针
     /*DAO层*/
     ChatMessageDAO chatMessageDAO;
 
@@ -93,33 +96,17 @@ public slots:
     void udp_broadcast_slot();  
 
     // 设置槽 ---------------/////////////
-    // 设置自己的用户名
-    void setUserName(const QString& userName);
-    // 设置头像
-    void setAvatar(const QString& avatarPath);
-    // 设置个性签名
-    void setSignature(const QString& signature);
-    // 设置手机电话。。。。。。。。。尽情期待
+    // 个人信息界面设置
+    void personalInfoSettings();
+    
+    // 系统设置界面设置
+    void systemSettings();
+    
+    // 网络设置界面设置
+    void networkSettings();
 
-    //左键单击托盘图标打开主界面
-    void trayIconActivated(bool Is);
-    // 双击运行程序时最小化
-    void doubleClickMinimized(bool Is);
-    // 关闭程序时最小化
-    void closeToTray(bool Is);
-    // 设置保存聊天记录位置
-    void setChatHistoryPath(const QString& path);
-
-    // 设置文件接收位置
-    void setFileReceivePath(const QString& path);
-    // 设置其他用户上线时进行通知
-    void setNotifyWhenOnline(bool notify);
-    // 设置其他用户下线时进行通知
-    void setNotifyWhenOffline(bool notify);
-    // 设置自动刷新设置
-    void setAutoRefresh(int refreshTime);
-    // 设置请勿打扰
-    void setDoNotDisturb(bool doNotDisturb);
+    // 功能设置界面设置
+    void functionSettings();
 public slots:
     // 从底层接收数据槽函数
     void receiveDataFromLowerLayer(std::vector<char>&& data);

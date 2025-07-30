@@ -166,6 +166,7 @@ void PersonalInfoSettingsPage::setupUi()
 
 void PersonalInfoSettingsPage::setupConnections()
 {
+    // 连接按钮点击事件
     connect(customAvatarSetButton, &QPushButton::clicked, this, &PersonalInfoSettingsPage::on_customAvatarSet_clicked);
     connect(customAvatarCancelButton, &QPushButton::clicked, this, &PersonalInfoSettingsPage::on_customAvatarCancel_clicked);
     connect(personalPhotoSetButton, &QPushButton::clicked, this, &PersonalInfoSettingsPage::on_personalPhotoSet_clicked);
@@ -215,8 +216,22 @@ void PersonalInfoSettingsPage::on_personalPhotoCancel_clicked() {
     personalPhotoDisplay->setPixmap(QPixmap(":/images/default_personal_photo.png").scaled(128, 128, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }
 void PersonalInfoSettingsPage::on_viewAllUserInfo_clicked() { qDebug() << "查看所有用户信息资料 按钮被点击！"; }
-void PersonalInfoSettingsPage::on_confirm_clicked() { qDebug() << "确定 按钮被点击！"; }
-void PersonalInfoSettingsPage::on_cancel_clicked() { qDebug() << "取消 按钮被点击！"; }
+void PersonalInfoSettingsPage::on_confirm_clicked() { 
+    qDebug() << "确定 按钮被点击！"; 
+    // 读取中间层的值
+    dispositionMiddle->getPersonalSetting().isSetting = true;
+    dispositionMiddle->getPersonalSetting().username = usernameLineEdit->text().toStdString();
+    emit confirm();
+}
+void PersonalInfoSettingsPage::on_cancel_clicked() { 
+    qDebug() << "取消 按钮被点击！";
+    // 读取中间层的值
+    dispositionMiddle->getPersonalSetting().isSetting = false;
+    usernameLineEdit->setText(QString::fromStdString(dispositionMiddle->getPersonalSetting().username));
+    
+    emit cancle();
+
+ }
 
 
 // ----------- SystemSettingsPage 类实现 (保持不变) -----------
@@ -311,50 +326,65 @@ void SystemSettingsPage::setupConnections()
 {
     //connect(launchOnBootCheckBox, &QCheckBox::toggled, launchMinimizedOnBootCheckBox, &QCheckBox::setEnabled);
 
-    connect(trayClickOpenMainCheckBox, &QCheckBox::toggled, this, &SystemSettingsPage::on_trayClickOpenMainCheckBox_toggled);
+    // connect(trayClickOpenMainCheckBox, &QCheckBox::toggled, this, &SystemSettingsPage::on_trayClickOpenMainCheckBox_toggled);
     //connect(launchMinimizedOnBootCheckBox, &QCheckBox::toggled, this, &SystemSettingsPage::on_launchOnBootCheckBox_toggled);
 
-    connect(browseChatLogPathButton, &QPushButton::clicked, this, &SystemSettingsPage::on_browseChatLogPathButton_clicked);
-    connect(openChatLogPathButton, &QPushButton::clicked, this, &SystemSettingsPage::on_openChatLogPathButton_clicked);
+    // connect(browseChatLogPathButton, &QPushButton::clicked, this, &SystemSettingsPage::on_browseChatLogPathButton_clicked);
+    // connect(openChatLogPathButton, &QPushButton::clicked, this, &SystemSettingsPage::on_openChatLogPathButton_clicked);
 
     connect(confirmButton, &QPushButton::clicked, this, &SystemSettingsPage::on_confirmButton_clicked);
     connect(cancelButton, &QPushButton::clicked, this, &SystemSettingsPage::on_cancelButton_clicked);
 }
 
-void SystemSettingsPage::on_launchOnBootCheckBox_toggled(bool checked) {
-    if (sender() == launchMinimizedOnBootCheckBox) {
-        if (checked) {
-            trayClickOpenMainCheckBox->setChecked(false);
-        }
-    } else if (sender() == launchOnBootCheckBox) {
-        launchMinimizedOnBootCheckBox->setEnabled(checked);
-    }
-}
+// void SystemSettingsPage::on_launchOnBootCheckBox_toggled(bool checked) {
+//     if (sender() == launchMinimizedOnBootCheckBox) {
+//         if (checked) {
+//             trayClickOpenMainCheckBox->setChecked(false);
+//         }
+//     } else if (sender() == launchOnBootCheckBox) {
+//         launchMinimizedOnBootCheckBox->setEnabled(checked);
+//     }
+// }
 
-void SystemSettingsPage::on_trayClickOpenMainCheckBox_toggled(bool checked) {
-    if (checked) {
-        launchMinimizedOnBootCheckBox->setChecked(false);
-    }
-}
+// void SystemSettingsPage::on_trayClickOpenMainCheckBox_toggled(bool checked) {
+//     if (checked) {
+//         launchMinimizedOnBootCheckBox->setChecked(false);
+//     }
+// }
 
-void SystemSettingsPage::on_browseChatLogPathButton_clicked() {
-    QString dir = QFileDialog::getExistingDirectory(this, tr("选择聊天记录保存路径"), chatLogPathLineEdit->text());
-    if (!dir.isEmpty()) {
-        chatLogPathLineEdit->setText(dir);
-        qDebug() << "聊天记录路径设置为：" << dir;
-    }
-}
+// void SystemSettingsPage::on_browseChatLogPathButton_clicked() {
+//     QString dir = QFileDialog::getExistingDirectory(this, tr("选择聊天记录保存路径"), chatLogPathLineEdit->text());
+//     if (!dir.isEmpty()) {
+//         chatLogPathLineEdit->setText(dir);
+//         qDebug() << "聊天记录路径设置为：" << dir;
+//     }
+// }
 
-void SystemSettingsPage::on_openChatLogPathButton_clicked() {
-    QString path = chatLogPathLineEdit->text();
-    if (!path.isEmpty()) {
-        QDesktopServices::openUrl(QUrl::fromLocalFile(path));
-        qDebug() << "打开聊天记录路径：" << path;
-    }
-}
+// void SystemSettingsPage::on_openChatLogPathButton_clicked() {
+//     QString path = chatLogPathLineEdit->text();
+//     if (!path.isEmpty()) {
+//         QDesktopServices::openUrl(QUrl::fromLocalFile(path));
+//         qDebug() << "打开聊天记录路径：" << path;
+//     }
+// }
 
-void SystemSettingsPage::on_confirmButton_clicked() { qDebug() << "系统设置 - 确定 按钮被点击！"; }
-void SystemSettingsPage::on_cancelButton_clicked() { qDebug() << "系统设置 - 取消 按钮被点击！"; }
+void SystemSettingsPage::on_confirmButton_clicked() { 
+    qDebug() << "系统设置 - 确定 按钮被点击！"; 
+    dispositionMiddle->getSystemSetting().trayClickOpenMain = trayClickOpenMainCheckBox->isChecked();
+    dispositionMiddle->getSystemSetting().doubleClickMinimized = doubleClickMinimizedCheckBox->isChecked();
+    dispositionMiddle->getSystemSetting().closeToTray = closeToTrayCheckBox->isChecked();
+    dispositionMiddle->getSystemSetting().chatLogPath = chatLogPathLineEdit->text().toStdString();
+    emit confirm();
+}
+void SystemSettingsPage::on_cancelButton_clicked() { 
+    qDebug() << "系统设置 - 取消 按钮被点击！"; 
+    // 读中间层的值
+    trayClickOpenMainCheckBox->setChecked(dispositionMiddle->getSystemSetting().trayClickOpenMain);
+    doubleClickMinimizedCheckBox->setChecked(dispositionMiddle->getSystemSetting().doubleClickMinimized);
+    closeToTrayCheckBox->setChecked(dispositionMiddle->getSystemSetting().closeToTray);
+    chatLogPathLineEdit->setText(QString::fromStdString(dispositionMiddle->getSystemSetting().chatLogPath));
+    emit cancle();
+}
 
 // ----------- NetworkSettingsPage 类实现 (更新，使用 QComboBox) -----------
 NetworkSettingsPage::NetworkSettingsPage(QWidget *parent)
@@ -468,20 +498,16 @@ void NetworkSettingsPage::on_confirmButton_clicked()
 {
     qDebug() << "网络设置 - 确定 按钮被点击！";
     // 在这里获取并保存所有设置
-    QString selectedMacIp = macIpComboBox->currentText();
-    bool enableBreakpointResume = enableBreakpointResumeCheckBox->isChecked();
-    int breakpointSize = breakpointResumeSizeLineEdit->text().toInt();
-
-    qDebug() << "保存设置：";
-    qDebug() << "  指定的MAC/IP：" << selectedMacIp;
-    qDebug() << "  启用断点续传：" << enableBreakpointResume;
-    qDebug() << "  断点续传大小：" << breakpointSize << "KB";
+    dispositionMiddle->getNetworkSetting().breakPointResume = enableBreakpointResumeCheckBox->isChecked();
+    dispositionMiddle->getNetworkSetting().breakpointResumeSize = breakpointResumeSizeLineEdit->text().toInt();
+    emit confirm();
 }
 
 void NetworkSettingsPage::on_cancelButton_clicked()
 {
     qDebug() << "网络设置 - 取消 按钮被点击！";
     // 恢复到上次保存的状态或默认状态
+    
 }
 
 //FunctionSettingsPage 类实现
@@ -712,18 +738,20 @@ void SettingsWidget::setupUi()
     // 创建并添加各个设置页面
     personalInfoPage = new PersonalInfoSettingsPage(this);
     stackedWidget->addWidget(personalInfoPage);
+    personalInfoPage->dispositionMiddle = &this->dispositionMiddle;
 
     systemSettingsPage = new SystemSettingsPage(this);
     stackedWidget->addWidget(systemSettingsPage);
-
+    systemSettingsPage->dispositionMiddle = &this->dispositionMiddle;
     // 添加 "功能设置" 页面
     functionSettingsPage = new FunctionSettingsPage(this); // 使用新创建的 FunctionSettingsPage 实例
     stackedWidget->addWidget(functionSettingsPage);
+    functionSettingsPage->dispositionMiddle = &this->dispositionMiddle;
 
     // Add the NetworkSettingsPage
     networkSettingsPage = new NetworkSettingsPage(this);
     stackedWidget->addWidget(networkSettingsPage);
-
+    networkSettingsPage->dispositionMiddle = &this->dispositionMiddle;
 
 
     // 主布局

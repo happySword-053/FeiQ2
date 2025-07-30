@@ -1,7 +1,44 @@
 #include "dispositionReader.h"
-#include <iostream>
 
-bool DispositionReader::writeConfig(const std::string & configName, std::vector<std::pair<std::string, std::string>>& configs)
+// 添加辅助函数：按点分隔符拆分路径
+std::vector<std::string> splitPath(const std::string& path) {
+    std::vector<std::string> result;
+    std::stringstream ss(path);
+    std::string segment;
+    while (std::getline(ss, segment, '.')) {
+        if (!segment.empty()) {
+            result.push_back(segment);
+        }
+    }
+    return result;
+}
+
+// 添加辅助函数：递归设置嵌套JSON值
+void setNestedValue(Json::Value& root, const std::vector<std::string>& pathSegments, const ConfigValue& value, size_t index = 0) {
+    if (index == pathSegments.size() - 1) {
+        // 根据值类型设置JSON节点
+        std::visit([&](auto&& arg) {
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_same_v<T, std::string>) {
+                root[pathSegments[index]] = arg;
+            } else if constexpr (std::is_same_v<T, int>) {
+                root[pathSegments[index]] = arg;
+            } else if constexpr (std::is_same_v<T, bool>) {
+                root[pathSegments[index]] = arg;
+            }
+        }, value);
+        return;
+    }
+    
+    std::string currentKey = pathSegments[index];
+    if (!root.isMember(currentKey) || !root[currentKey].isObject()) {
+        root[currentKey] = Json::Value(Json::objectValue);
+    }
+    
+    setNestedValue(root[currentKey], pathSegments, value, index + 1);
+}
+
+bool DispositionReader::writeConfig(const std::string & configName, std::vector<std::pair<std::string, ConfigValue>>& configs)
 {
     Json::StreamWriterBuilder writer;
     writer["emitUTF8"] = true;
@@ -19,17 +56,17 @@ bool DispositionReader::writeConfig(const std::string & configName, std::vector<
     try {
         auto root = configMap[configName].first;
         for(auto& config : configs){
-            // 检查配置项是否存在于根节点中
-            if (root.isMember(config.first)) {
-                // 如果存在，更新配置项的值
-                root[config.first] = config.second;
-                std::cout << "更新配置项: " << config.first << " = " << config.second << std::endl;
-
-            }
+            std::vector<std::string> pathSegments = splitPath(config.first);
+            if (pathSegments.empty()) continue;
+            // 使用多类型值设置嵌套节点
+            setNestedValue(root, pathSegments, config.second);
+            //std::cout << "更新配置项: " << config.first << " = " << config.second << std::endl;
+            LOG("更新配置项: " + configName, INFO);
         }
         std::unique_ptr<Json::StreamWriter> stream_writer(writer.newStreamWriter());
         stream_writer->write(root, &ofs);
         ofs.flush(); // 添加强制刷新
+        configMap[configName].first = root; // 同步回内存
     } 
     catch (...) {
         ofs.close();
@@ -71,17 +108,30 @@ bool DispositionReader::init()
         auto json_files = getFileList();
         for (auto& file : json_files) {
             
-            //提取文件名与路径
-            auto begin = file.find_last_of("/"); // 查找最后一个'/'的位置
-            auto end = file.find_last_of("."); // 查找最后一个'.'的位置
-            auto name = file.substr(begin + 1, end - begin - 1); // 提取文件名（不包含路径和扩展名）
+            // 提取文件名与路径 - 更健壮的方式
+            size_t begin = file.find_last_of("/\\");
+            size_t end = file.find_last_of(".");
+            std::string name;
             
+            if (begin != std::string::npos && end != std::string::npos && begin < end) {
+                name = file.substr(begin + 1, end - begin - 1);
+            } else if (end != std::string::npos) {
+                // 没有路径分隔符，但有扩展名
+                name = file.substr(0, end);
+            } else if (begin != std::string::npos) {
+                // 有路径分隔符，但没有扩展名
+                name = file.substr(begin + 1);
+            } else {
+                // 既没有路径分隔符，也没有扩展名
+                name = file;
+            }
             // 读取配置文件
             Json::Value root = readConfig(file);
             // 将配置文件的根节点和文件名存储到 configMap 中
             configMap[name] = std::make_pair(root,file);
         }
     }catch(...){
+        LOG("DispositionReader init failed!", ERROR);
         std::cerr << "DispositionReader init failed!" << std::endl;
         return false;
     }
@@ -120,4 +170,25 @@ std::vector<std::string> DispositionReader::getFileList()
     }
     // 返回包含所有 JSON 文件路径的向量
     return json_files;
+}
+
+std::string DispositionReader::readValue(const std::string& configName, const std::string& key)
+{
+    std::unique_lock<std::mutex> lock(config_mutex_);
+    if(configMap.find(configName) == configMap.end()){
+        return "";
+    }
+    Json::Value root = configMap[configName].first;
+    std::vector<std::string> pathSegments = splitPath(key);
+    for (size_t i = 0; i < pathSegments.size(); ++i) {
+        if (!root.isMember(pathSegments[i])) {
+            return "";
+        }
+        root = root[pathSegments[i]];
+    }
+    if (root.isString()) return root.asString();
+    if (root.isInt()) return std::to_string(root.asInt());
+    if (root.isDouble()) return std::to_string(root.asDouble());
+    // 其他类型可自行扩展
+    return "";
 }

@@ -15,13 +15,17 @@
 #include <QListWidgetItem>
 #include <QMainWindow>
 #include<QMap>
+#include<QDialog>
+#include<QSystemTrayIcon>
+#include<QIcon>
+#include <QMouseEvent>
+#include<QMenu>
 #include"../MyControl/MyWidget/FriendChatWidget.h"
 #include"../MyControl/MyWidget/FriendItemWidget.h"
 #include"../MyControl/MyWidget/MessageBubble.h"
 #include"sharefilemanagerwidget.h"
 #include"settingswidget.h"
 #include"../logs/logs.h"
-#include<QDialog>
 // QT_BEGIN_NAMESPACE
 // namespace Ui {
 // class MainWindow;
@@ -54,6 +58,8 @@ private slots:
     // 点击“模拟接收”按钮的槽函数
     void onSimulateReceive();
 
+    // 托盘点击槽函数
+    void onTrayIconActivated(QSystemTrayIcon::ActivationReason reason);
 private:
     // 插入“对方”消息（左对齐，黄色气泡）
     void insertIncomingMessage(const QString &sender, const QString &content) ;
@@ -69,6 +75,9 @@ private:
 
     // 向中控模块发送获取好友列表
     std::function<void()> getFriendsList; 
+
+    // 重写双击事件，双击隐藏当前界面
+    void mouseDoubleClickEvent(QMouseEvent *event);
 public:
     // 设置好友列表相关接口的回调函数
     void setFriendsInterface(std::function<void()> friendsInterface){
@@ -82,6 +91,22 @@ public:
     void setGetFriendHistoryByTime(std::function<void()> getFriendHistoryByTime){
         this->getFriendHistoryByTime = getFriendHistoryByTime;
     }
+
+public:
+    // 获取控件
+    QListWidget* getFriendList(){return m_friendList;}
+    QTextEdit* getInputEdit(){return m_inputEdit;}
+    QPushButton* getSendBtn(){return m_sendBtn;}
+    QPushButton* getSimulateBtn(){return m_simulateBtn;}
+    QScrollArea* getScrollArea(){return m_scrollArea;}
+    QVBoxLayout* getChatLayout(){return m_chatLayout;}
+    QWidget* getChatArea(){return m_chatArea;}
+    ShareFileManagerWidget* getShareFileManagerWidget(){return shareFileManagerWidget;}
+    SettingsWidget* getSettingsWidget(){return settingsWidget;}
+    QMap<QListWidgetItem *, QWidget *>& getFriendWidgets(){return m_friendWidgets;}
+    FriendItemWidget* getCurrentFriendItemWidget(){return currentFriendItemWidget;}
+    QSystemTrayIcon* getTrayIcon(){return trayIcon;}
+    QList<QWidget*>& getWidgetList(){return widgetList;}
 private:
     QListWidget   *m_friendList; // 好友列表控件指针
     QWidget       *m_chatArea;   // 聊天区域控件指针
@@ -94,6 +119,13 @@ private:
     SettingsWidget *settingsWidget; // 设置窗口指针
     QMap<QListWidgetItem *, QWidget *> m_friendWidgets; // 好友控件映射表
     FriendItemWidget *currentFriendItemWidget = nullptr; // 当前选中的好友项控件指针
+    QSystemTrayIcon* trayIcon; // 系统托盘图标指针
+    QMenu* trayMenu; // 托盘菜单指针
+    QList<QWidget*> widgetList;// 存储当前打开的窗口
+
+signals:
+    // 发送消息给网络层（已经加密压缩）
+    void sendMessageSignal(const QString& message, const FriendInfo& friendInfo);
 };
 
 #endif // MAINWINDOW_H  // 头文件结束宏

@@ -1,17 +1,17 @@
 {
-  "appConfig": {
-    "fileReceivePath": "/default/receive/folder",
-    "notificationSettings": {
-      "userOnlineNotify": true,
-      "userOfflineNotify": true
-    },
-    "autoRefreshSettings": {
-      "enableAutoRefresh": true,
-      "refreshIntervalSeconds": 30
-    },
-    "doNotDisturbSettings": {
-      "enableDoNotDisturb": false,
-      "autoReplyMessage": "我正在专注工作，请稍后再联系"
-    }
+  
+  "fileReceivePath": "/default/receive/folder",
+  "notificationSettings": {
+    "userOnlineNotify": false,
+    "userOfflineNotify": false
+  },
+  "autoRefreshSettings": {
+    "enableAutoRefresh": false,
+    "refreshIntervalSeconds": 30
+  },
+  "doNotDisturbSettings": {
+    "enableDoNotDisturb": false,
+    "autoReplyMessage": "我正在专注工作，请稍后再联系"
   }
+  
 }

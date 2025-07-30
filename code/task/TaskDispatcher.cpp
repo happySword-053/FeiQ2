@@ -15,8 +15,7 @@ std::list<MessageBubble *> TaskDispatcher::getFriendHistory(const QString &frien
             QString content = QString::fromStdString(chatMessageDO.getContent());
             QString sender = QString::fromStdString(chatMessageDO.getMac());
             MessageBubble *messageBubble = new MessageBubble(type, sender, time, content);
-            messageBubbles.push_back(messageBubble);
-            
+            messageBubbles.push_back(messageBubble);          
         }
     }catch(const std::runtime_error& e){
         LOG(std::string("查询聊天消息失败,错误输出") + e.what() + ",好友mac为:" + friendMac.toUtf8().data(), ERROR);
@@ -30,3 +29,18 @@ FriendInfo TaskDispatcher::getFriendInfo(const QString &friendMac)
     return this->friends.getFriendInfoByMac(friendMac.toUtf8().data());
 }
 
+void TaskDispatcher::personalInfoSettings()
+{
+    // 获取界面指针
+    auto personalInfoSettingsPage = this->mainWindow->getSettingsWidget()->getPersonalInfoSettingsPage();
+    std::string userName = personalInfoSettingsPage->getUserName().toUtf8().data();
+    UserInfoHelper::getInstance().setUserName(userName);
+}
+
+void TaskDispatcher::systemSettings()
+{
+    // 获取界面指针
+    auto systemSettingsPage = this->mainWindow->getSettingsWidget()->getSystemSettingsPage();
+    
+    
+}
